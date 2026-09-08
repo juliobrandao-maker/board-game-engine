@@ -14,7 +14,7 @@ public class Board {
             }
         }
     }
-    public void exibirtabuleiro(){
+    public void exibirTabuleiro(){
         for (int i = 0; i < linha; i++) {
             for (int j = 0; j < coluna; j++) {
                 System.out.print(" " +this.tabuleiro[i][j] + " ");
@@ -28,17 +28,26 @@ public class Board {
             }
         }
     }
-    public boolean posicaovazia(int l, int c){
+    public boolean posicaoVazia(int l, int c){
         if (l>=0 && l<linha && c>=0 && c < coluna){
             return tabuleiro[l][c] == ' ';
         }
         return false;
     }
-    public boolean marcarposicao(int l, int c, char simbolo){
-        if (posicaovazia(l,c)){
+    public boolean marcarPosicao(int l, int c, char simbolo){
+        if (posicaoVazia(l,c)){
             this.tabuleiro[l][c] = simbolo;
             return true;
         }
         return false;
+    }
+    public int getLinha(){
+        return this.linha;
+    }
+    public int getColuna(){
+        return this.coluna;
+    }
+    public char getSimbolo(int l, int c){
+        return this.tabuleiro[l][c];
     }
 }
