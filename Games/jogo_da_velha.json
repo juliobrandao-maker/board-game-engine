@@ -1,0 +1,17 @@
+{
+  "jogo": "Jogo Da Velha",
+  "tabuleiro":{
+  "linhas": 3,
+  "colunas": 3
+},
+  "jogador":{
+    "quantidadedeJogador": 2,
+    "simbolo": ["X" , "O"]
+},
+  "regras": {
+    "condicaodeVitoria": {
+      "tipo": "alinhamento",
+      "quantidade": 3
+    }
+  }
+}

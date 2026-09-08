@@ -24,7 +24,13 @@ public class Board {
             }
             System.out.println();
             if (i<linha-1){
-                System.out.println("---+---+---");
+                for (int k = 0; k<coluna;k++){
+                    System.out.print("---");
+                    if (k<coluna-1){
+                        System.out.print("+");
+                    }
+                }
+                System.out.println();
             }
         }
     }
