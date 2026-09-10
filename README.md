@@ -1,45 +1,84 @@
-# board-game-engine
-Trabalho da disciplina de LPOO onde tem como foco criar em Java, uma Game Engine (motor de jogo) para jogos de tabuleiro com foco em Orientação a Objetos e arquivos de configuração (como JSON)
-## Diagrama de Classes
+# Board Game Engine
+
+Engine extensível para jogos de tabuleiro desenvolvida em Java como parte da disciplina de Linguagem de Programação Orientada a Objetos.
+
+A Engine permite carregar e executar diferentes jogos de tabuleiro a partir de arquivos de configuração em formato JSON, sem a necessidade de modificar ou recompilar o código-fonte da aplicação.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+* **Java 17+**
+* **Gson 2.10+** (para desserialização dos arquivos JSON)
+
+---
+
+## 🏗️ Arquitetura da Engine
+
+A solução utiliza **Polimorfismo**, **Interfaces** e **Injeção de Dependências** para isolar as regras específicas de cada jogo dos componentes centrais da aplicação.
 
 ```mermaid
 classDiagram
-    class Game {
-        -Board tabuleiro
-        -Player jogador1
-        -Player jogador2
-        -Player jogadorAtual
-        +Game()
-        +iniciarjogo() void
-        +verificarvitoria(char simbolo) boolean
-        +verificarlinha(char simbolo) boolean
-        +verificarcoluna(char simbolo) boolean
-        +verificardiagonal(char simbolo) boolean
+    class Main {
+        +main(String[] args)
+    }
+
+    class GameLoader {
+        +LoadConfig(String caminho): GameConfig
+    }
+
+    class GameConfig {
+        -String jogo
+        -TabuleiroConfig tabuleiro
+        -PlayerConfig jogador
+        -RegrasConfig regras
+        +getJogo(): String
+        +getTabuleiro(): TabuleiroConfig
+        +getJogador(): PlayerConfig
+        +getRegras(): RegrasConfig
     }
 
     class Board {
+        -char[][] matriz
         -int linha
         -int coluna
-        -char[][] matriz
-        +getLinha() int
-        +getColuna() int
-        +getSimbolo(int l, int c) char
-        +marcarposicao(int l, int c, char s) boolean
-        +exibirTabuleiro() void
+        +marcarPosicao(int l, int c, char s): boolean
+        +exibirTabuleiro()
     }
 
     class Player {
         -String nome
         -char simbolo
-        +getNome() String
-        +getSimbolo() char
+        +getNome(): String
+        +getSimbolo(): char
     }
 
-    class Main {
-        +main(String[] args)$ void
+    class WinCondition {
+        <<interface>>
+        +verificarVitoria(Board board, int linha, int coluna, char simbolo): boolean
     }
 
-    Game "1" *-- "1" Board : contem
-    Game "1" *-- "2..3" Player : gerencia
-    Main ..> Game : instancia
-```
+    class AlinhamentoWinCondition {
+        -int quantidade
+        +verificarVitoria(Board board, int linha, int coluna, char simbolo): boolean
+    }
+
+    class Game {
+        -Board tabuleiro
+        -List~Player~ jogadores
+        -GameConfig config
+        -WinCondition winCondition
+        +iniciarJogo(Scanner sc)
+    }
+
+    class ConfiguraçãoinvalidaException {
+    }
+
+    WinCondition <|.. AlinhamentoWinCondition : implementa
+    Game --> Board : possui
+    Game --> Player : possui
+    Game --> WinCondition : utiliza
+    GameLoader --> GameConfig : cria
+    Main --> GameLoader : invoca
+    Main --> Game : instancia
+    GameLoader ..> ConfiguraçãoinvalidaException : lança
