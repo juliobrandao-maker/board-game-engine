@@ -10,9 +10,10 @@ public class Game {
     private Player jogadoratual;
 
     // Construtor recebendo as configurações, o tabuleiro e os jogadores já montados
-    public Game(Board tabuleiro, List<Player> jogadores, GameConfig config) {
+    public Game(Board tabuleiro, List<Player> jogadores, GameConfig config,  WinCondition winCondition) {
         this.tabuleiro = tabuleiro;
         this.jogadores = jogadores;
+        this.winCondition = winCondition;
         this.config = config;
     }
 
@@ -21,6 +22,7 @@ public class Game {
         Random gerador = new Random();
         int indexAtual = gerador.nextInt(jogadores.size());
         this.jogadoratual = jogadores.get(indexAtual);
+
 
         System.out.println("\n=== INÍCIO DA PARTIDA ===");
         System.out.println("Sorteio realizado! Quem começa é o jogador: " + jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + ")\n");
