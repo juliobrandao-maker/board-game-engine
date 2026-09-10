@@ -1,0 +1,17 @@
+{
+  "jogo": "Conect Four",
+  "tabuleiro":{
+    "linhas": 6,
+    "colunas": 7
+  },
+  "jogador":{
+    "quantidadedeJogador": 2,
+    "simbolo": ["R" , "Y"]
+  },
+  "regras": {
+    "condicaodeVitoria": {
+      "tipo": "alinhamento",
+      "quantidade": 4
+    }
+  }
+}
