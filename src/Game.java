@@ -6,6 +6,7 @@ public class Game {
     private Board tabuleiro;
     private List<Player> jogadores;
     private GameConfig config;
+    private WinCondition winCondition;
     private Player jogadoratual;
 
     // Construtor recebendo as configurações, o tabuleiro e os jogadores já montados
@@ -40,7 +41,7 @@ public class Game {
                 jogada++;
 
                 // Passa a posição da jogada atual para checar a vitória dinamicamente
-                if (verificarvitoria(linha, coluna, jogadoratual.getSimbolo())) {
+                if (winCondition.verificarVitoria(tabuleiro,linha, coluna, jogadoratual.getSimbolo())) {
                     tabuleiro.exibirTabuleiro();
                     System.out.println("\nParabéns!! " + jogadoratual.getNome() + " Você venceu!!");
                     jogoativ = false;
@@ -59,35 +60,5 @@ public class Game {
         }
     }
 
-    // Verificação de vitória dinâmica para qualquer tamanho de tabuleiro e regra do JSON
-    public boolean verificarvitoria(int ultimaLinha, int ultimaColuna, char simbolo) {
-        int quantidadeNecessaria = config.getRegras().getCondicaodeVitoria().getQuantidade();
 
-        return checarDirecao(ultimaLinha, ultimaColuna, 0, 1, simbolo, quantidadeNecessaria) ||  // Horizontal
-                checarDirecao(ultimaLinha, ultimaColuna, 1, 0, simbolo, quantidadeNecessaria) ||  // Vertical
-                checarDirecao(ultimaLinha, ultimaColuna, 1, 1, simbolo, quantidadeNecessaria) ||  // Diagonal Principal
-                checarDirecao(ultimaLinha, ultimaColuna, 1, -1, simbolo, quantidadeNecessaria);   // Diagonal Secundária
     }
-
-    private boolean checarDirecao(int r, int c, int dr, int dc, char simbolo, int meta) {
-        int contagem = 1;
-        contagem += contarEmDirecao(r, c, dr, dc, simbolo);
-        contagem += contarEmDirecao(r, c, -dr, -dc, simbolo);
-        return contagem >= meta;
-    }
-
-    private int contarEmDirecao(int r, int c, int dr, int dc, char simbolo) {
-        int contagem = 0;
-        int nr = r + dr;
-        int nc = c + dc;
-
-        while (nr >= 0 && nr < tabuleiro.getLinha() &&
-                nc >= 0 && nc < tabuleiro.getColuna() &&
-                tabuleiro.getSimbolo(nr, nc) == simbolo) {
-            contagem++;
-            nr += dr;
-            nc += dc;
-        }
-        return contagem;
-    }
-}
