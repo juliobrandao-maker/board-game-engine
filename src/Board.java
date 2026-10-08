@@ -47,6 +47,9 @@ public class Board {
         }
         return false;
     }
+    public char getPosicao(int l, int c) {
+        return this.tabuleiro[l][c];
+    }
     public int getLinha(){
         return this.linha;
     }

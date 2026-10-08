@@ -80,9 +80,8 @@ public class Main {
                 jogadores.add(new Player(nome, simboloChar));
             }
 
-            // 8. Instancia a condição de vitória concreta acoplada à interface WinCondition
-            int quantidadeMeta = config.getRegras().getCondicaodeVitoria().getQuantidade();
-            WinCondition winCondition = new AlinhamentoWinCondition(quantidadeMeta);
+            // 8. Instancia a condição de vitória concreta acoplada à interface WinConditio
+            WinCondition winCondition = WinConditionFactory.criar(config.getRegras().getCondicaodeVitoria());
 
             // 9. Instancia o motor do jogo com suas dependências e inicia a partida
             Game jogo = new Game(tabuleiro, jogadores, config, winCondition);

@@ -1,0 +1,15 @@
+{
+  "tabuleiro": {
+    "linhas": 3,
+    "colunas": 3
+  },
+  "jogador": {
+    "quantidadeDeJogador": 2,
+    "simbolo": ["X", "O"]
+  },
+  "regras": {
+    "condicaodeVitoria": {
+      "tipo": "CANTOS"
+    }
+  }
+}

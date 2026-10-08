@@ -35,12 +35,10 @@ public class GameLoader {
         if(config.getRegras().getCondicaodeVitoria() == null){
             throw new ConfiguraçãoIvalidaException("Condição de vitória não definida no arquivo.");
         }
-        String tipoVitoria = config.getRegras().getCondicaodeVitoria().getTipo();
-        if (!tipoVitoria.equalsIgnoreCase("ALINHAMENTO" )&& !tipoVitoria.equalsIgnoreCase("Alignment")) {
-            throw new ConfiguraçãoIvalidaException("Regra de vitória '" + tipoVitoria + "' não é reconhecida pela Engine.");
-        }
-        if (config.getRegras().getCondicaodeVitoria().getQuantidade()<=0){
-            throw new ConfiguraçãoIvalidaException("A quantidade para a meta deve ser maior que zero.");
+        if (config.getRegras().getCondicaodeVitoria() == null ||
+                config.getRegras().getCondicaodeVitoria().getTipo() == null ||
+                config.getRegras().getCondicaodeVitoria().getTipo().trim().isEmpty()) {
+            throw new ConfiguraçãoIvalidaException("Condição de vitória não definida no arquivo.");
         }
     }
 
