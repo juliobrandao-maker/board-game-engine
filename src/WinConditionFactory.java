@@ -18,6 +18,10 @@ public class WinConditionFactory {
             case "ELIMINATION":
             case "MAIORIA":
                 return new EliminationWinCondition(config.getQuantidade());
+            case "REACH_POSITION":
+            case "POSICAO":
+            case "TRAVESSIA":
+                return new ReachPositionWinCondition();
 
             default:
                 throw new ConfiguraçãoIvalidaException("Regra de vitória '" + config.getTipo() + "' não reconhecida.");

@@ -21,6 +21,11 @@ public class Game {
         int indexAtual = gerador.nextInt(jogadores.size());
         this.jogadoratual = jogadores.get(indexAtual);
 
+        // Se for jogo de Travessia, posiciona 1 peça inicial aleatória para cada jogador
+        if (winCondition instanceof ReachPositionWinCondition) {
+            tabuleiro.posicionarPecasIniciaisAleatorias(jogadores.get(0).getSimbolo(), jogadores.get(1).getSimbolo());
+        }
+
         limparTelaSeSuportado();
         System.out.println("====================================");
         System.out.println("       INÍCIO DA PARTIDA           ");
@@ -34,7 +39,7 @@ public class Game {
         while (jogoAtivo) {
             tabuleiro.exibirTabuleiro();
 
-            // Exibe o placar de capturas se o jogo for do tipo Eliminação
+            // Exibe informação complementar no placar para jogos de eliminação
             if (winCondition instanceof EliminationWinCondition) {
                 EliminationWinCondition ew = (EliminationWinCondition) winCondition;
                 System.out.println("--- PLACAR DE CAPTURAS (Meta: " + ew.getMetaCapturas() + " peças) ---");
@@ -47,7 +52,6 @@ public class Game {
             int linhaUser = -1;
             int colunaUser = -1;
 
-            // Leitura resiliente com tratamento de exceções
             try {
                 System.out.print("\n" + jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + "), digite a linha (1 a " + tabuleiro.getLinha() + "): ");
                 linhaUser = Integer.parseInt(sc.nextLine().trim());
@@ -60,35 +64,46 @@ public class Game {
                 continue;
             }
 
-            // Converte de base 1 (Interface do utilizador) para base 0 (Matriz interna)
             int linhaInterna = linhaUser - 1;
             int colunaInterna = colunaUser - 1;
 
-            if (!tabuleiro.posicaoVazia(linhaInterna, colunaInterna)) {
+            if (!tabuleiro.posicaoValida(linhaInterna, colunaInterna)) {
                 limparTelaSeSuportado();
-                System.out.println(" Jogada inválida ou posição já ocupada! Tente novamente.\n");
+                System.out.println(" Posição fora dos limites do tabuleiro! Tente novamente.\n");
                 continue;
             }
 
-            // Lógica de jogada: Captura/Eliminação vs Marcação Simples
-            if (winCondition instanceof EliminationWinCondition) {
-                EliminationWinCondition ew = (EliminationWinCondition) winCondition;
-                int capturadas = tabuleiro.marcarECapturar(linhaInterna, colunaInterna, jogadoratual.getSimbolo());
-                if (capturadas > 0) {
-                    ew.registrarCaptura(jogadoratual.getSimbolo(), capturadas);
+            // REGRAS DE POSICIONAMENTO
+            if (winCondition instanceof ReachPositionWinCondition) {
+                // Modo Travessia: Exige jogar adjacente a uma peça do seu próprio símbolo
+                if (!tabuleiro.ePosicaoAdjacenteAoSimboloValida(linhaInterna, colunaInterna, jogadoratual.getSimbolo())) {
                     limparTelaSeSuportado();
-                    System.out.println(" Jogada Incrível! " + jogadoratual.getNome() + " capturou " + capturadas + " peça(s) do adversário!\n");
-                } else {
-                    limparTelaSeSuportado();
+                    System.out.println(" Jogada Inválida! Você só pode colocar peças em casas vazias AO LADO de uma peça do seu próprio símbolo ('" + jogadoratual.getSimbolo() + "').\n");
+                    continue;
                 }
             } else {
-                tabuleiro.marcarPosicao(linhaInterna, colunaInterna, jogadoratual.getSimbolo());
+                if (!tabuleiro.posicaoVazia(linhaInterna, colunaInterna)) {
+                    limparTelaSeSuportado();
+                    System.out.println(" Jogada inválida! Posição já ocupada.\n");
+                    continue;
+                }
+            }
+
+            // Executa a jogada testando capturas ativas/passivas
+            int capturadas = tabuleiro.marcarECapturar(linhaInterna, colunaInterna, jogadoratual.getSimbolo());
+
+            if (winCondition instanceof EliminationWinCondition && capturadas > 0) {
+                EliminationWinCondition ew = (EliminationWinCondition) winCondition;
+                ew.registrarCaptura(jogadoratual.getSimbolo(), capturadas);
+                limparTelaSeSuportado();
+                System.out.println(" Jogada Incrível! " + jogadoratual.getNome() + " capturou " + capturadas + " peça(s) do adversário!\n");
+            } else {
                 limparTelaSeSuportado();
             }
 
             jogadasValidas++;
 
-            // Verificação da Condição de Vitória
+            // Verificação de Vitória
             if (winCondition.verificarVitoria(tabuleiro, linhaInterna, colunaInterna, jogadoratual.getSimbolo())) {
                 tabuleiro.exibirTabuleiro();
                 System.out.println("====================================");
@@ -102,7 +117,6 @@ public class Game {
                 System.out.println("====================================\n");
                 jogoAtivo = false;
             } else {
-                // Alterna o turno entre os jogadores da lista
                 indexAtual = (indexAtual + 1) % jogadores.size();
                 jogadoratual = jogadores.get(indexAtual);
             }
@@ -120,7 +134,7 @@ public class Game {
                 }
             }
         } catch (Exception e) {
-            // Fallback silencioso para ambientes não-TTY
+            // Fallback para IDE
         }
     }
 }

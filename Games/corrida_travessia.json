@@ -1,0 +1,17 @@
+{
+  "jogo": "Travessia Tática (Breakthrough)",
+  "tabuleiro": {
+    "linhas": 5,
+    "colunas": 5
+  },
+  "jogador": {
+    "quantidadedeJogador": 2,
+    "simbolo": ["X", "O"]
+  },
+  "regras": {
+    "condicaodeVitoria": {
+      "tipo": "REACH_POSITION",
+      "quantidade": 1
+    }
+  }
+}
