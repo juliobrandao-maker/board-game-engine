@@ -1,6 +1,6 @@
 import java.util.List;
-import java.util.Scanner;
 import java.util.Random;
+import java.util.Scanner;
 
 public class Game {
     private Board tabuleiro;
@@ -22,84 +22,105 @@ public class Game {
         this.jogadoratual = jogadores.get(indexAtual);
 
         limparTelaSeSuportado();
-        System.out.println("=== INÍCIO DA PARTIDA ===");
-        System.out.println("Sorteio realizado! Quem começa é o jogador: " + jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + ")\n");
+        System.out.println("====================================");
+        System.out.println("       INÍCIO DA PARTIDA           ");
+        System.out.println("====================================");
+        System.out.println("Sorteio realizado! Quem começa é: " + jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + ")\n");
 
-        boolean jogoativ = true;
-        int jogada = 0;
-        int jogadasmax = tabuleiro.getLinha() * tabuleiro.getColuna();
+        boolean jogoAtivo = true;
+        int jogadasValidas = 0;
+        int jogadasMaximas = tabuleiro.getLinha() * tabuleiro.getColuna();
 
-        while (jogoativ) {
+        while (jogoAtivo) {
             tabuleiro.exibirTabuleiro();
 
-            int maxLinhas = tabuleiro.getLinha();
-            int maxColunas = tabuleiro.getColuna();
+            // Exibe o placar de capturas se o jogo for do tipo Eliminação
+            if (winCondition instanceof EliminationWinCondition) {
+                EliminationWinCondition ew = (EliminationWinCondition) winCondition;
+                System.out.println("--- PLACAR DE CAPTURAS (Meta: " + ew.getMetaCapturas() + " peças) ---");
+                for (Player p : jogadores) {
+                    System.out.println("  " + p.getNome() + " (" + p.getSimbolo() + "): " + ew.getCapturas(p.getSimbolo()) + " captura(s)");
+                }
+                System.out.println("-----------------------------------------------------");
+            }
 
-            // Entrada amigável de 1 a N
-            int linhaDigitada = solicitarCoordenada(sc, jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + "), digite a linha (1-" + maxLinhas + "): ", 1, maxLinhas);
-            int colunaDigitada = solicitarCoordenada(sc, jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + "), digite a coluna (1-" + maxColunas + "): ", 1, maxColunas);
+            int linhaUser = -1;
+            int colunaUser = -1;
 
-            // Conversão de base 1 (usuário) para base 0 (matriz Java)
-            int linhaInterna = linhaDigitada - 1;
-            int colunaInterna = colunaDigitada - 1;
+            // Leitura resiliente com tratamento de exceções
+            try {
+                System.out.print("\n" + jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + "), digite a linha (1 a " + tabuleiro.getLinha() + "): ");
+                linhaUser = Integer.parseInt(sc.nextLine().trim());
 
-            if (tabuleiro.marcarPosicao(linhaInterna, colunaInterna, jogadoratual.getSimbolo())) {
-                jogada++;
+                System.out.print(jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + "), digite a coluna (1 a " + tabuleiro.getColuna() + "): ");
+                colunaUser = Integer.parseInt(sc.nextLine().trim());
+            } catch (NumberFormatException e) {
+                limparTelaSeSuportado();
+                System.out.println(" Entrada inválida! Por favor, digite apenas números inteiros.\n");
+                continue;
+            }
 
-                if (winCondition.verificarVitoria(tabuleiro, linhaInterna, colunaInterna, jogadoratual.getSimbolo())) {
+            // Converte de base 1 (Interface do utilizador) para base 0 (Matriz interna)
+            int linhaInterna = linhaUser - 1;
+            int colunaInterna = colunaUser - 1;
+
+            if (!tabuleiro.posicaoVazia(linhaInterna, colunaInterna)) {
+                limparTelaSeSuportado();
+                System.out.println(" Jogada inválida ou posição já ocupada! Tente novamente.\n");
+                continue;
+            }
+
+            // Lógica de jogada: Captura/Eliminação vs Marcação Simples
+            if (winCondition instanceof EliminationWinCondition) {
+                EliminationWinCondition ew = (EliminationWinCondition) winCondition;
+                int capturadas = tabuleiro.marcarECapturar(linhaInterna, colunaInterna, jogadoratual.getSimbolo());
+                if (capturadas > 0) {
+                    ew.registrarCaptura(jogadoratual.getSimbolo(), capturadas);
                     limparTelaSeSuportado();
-                    tabuleiro.exibirTabuleiro();
-                    System.out.println("\n🎉 Parabéns!! " + jogadoratual.getNome() + " você venceu!");
-                    jogoativ = false;
-                } else if (jogada == jogadasmax) {
-                    limparTelaSeSuportado();
-                    tabuleiro.exibirTabuleiro();
-                    System.out.println("\n🤝 O jogo empatou (velha)!");
-                    jogoativ = false;
+                    System.out.println(" Jogada Incrível! " + jogadoratual.getNome() + " capturou " + capturadas + " peça(s) do adversário!\n");
                 } else {
-                    indexAtual = (indexAtual + 1) % jogadores.size();
-                    jogadoratual = jogadores.get(indexAtual);
                     limparTelaSeSuportado();
                 }
             } else {
+                tabuleiro.marcarPosicao(linhaInterna, colunaInterna, jogadoratual.getSimbolo());
                 limparTelaSeSuportado();
-                System.out.println("⚠️ Posição já ocupada! Escolha outra célula no tabuleiro.\n");
             }
-        }
-    }
 
-    private int solicitarCoordenada(Scanner sc, String mensagem, int min, int max) {
-        while (true) {
-            System.out.print(mensagem);
-            try {
-                String entrada = sc.nextLine().trim();
-                int valor = Integer.parseInt(entrada);
+            jogadasValidas++;
 
-                if (valor >= min && valor <= max) {
-                    return valor;
-                }
-                System.out.println("⚠️ Digite um número entre " + min + " e " + max + ".");
-            } catch (NumberFormatException e) {
-                System.out.println("⚠️ Entrada inválida! Digite apenas números inteiros.");
+            // Verificação da Condição de Vitória
+            if (winCondition.verificarVitoria(tabuleiro, linhaInterna, colunaInterna, jogadoratual.getSimbolo())) {
+                tabuleiro.exibirTabuleiro();
+                System.out.println("====================================");
+                System.out.println(" PARABÉNS!! " + jogadoratual.getNome().toUpperCase() + " VENCEU A PARTIDA!");
+                System.out.println("====================================\n");
+                jogoAtivo = false;
+            } else if (jogadasValidas >= jogadasMaximas) {
+                tabuleiro.exibirTabuleiro();
+                System.out.println("====================================");
+                System.out.println(" O JOGO TERMINOU EM EMPATE!");
+                System.out.println("====================================\n");
+                jogoAtivo = false;
+            } else {
+                // Alterna o turno entre os jogadores da lista
+                indexAtual = (indexAtual + 1) % jogadores.size();
+                jogadoratual = jogadores.get(indexAtual);
             }
         }
     }
 
     private void limparTelaSeSuportado() {
-        // Verifica se o ambiente possui um console interativo real (TTY)
-        if (System.console() != null) {
-            try {
+        try {
+            if (System.console() != null) {
                 String os = System.getProperty("os.name").toLowerCase();
                 if (os.contains("win")) {
                     new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
                 } else {
                     new ProcessBuilder("clear").inheritIO().start().waitFor();
                 }
-            } catch (Exception e) {
-                // Se o processo falhar, não faz nada para evitar desformatar a tela
             }
+        } catch (Exception e) {
+            // Fallback silencioso para ambientes não-TTY
         }
-        // Se System.console() for null (aba Run do IntelliJ), NÃO faz nada.
-        // Mantém a exibição contínua sem saltos nem espaços gigantes em branco.
     }
 }

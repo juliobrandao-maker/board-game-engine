@@ -14,6 +14,7 @@ public class Board {
             }
         }
     }
+
     public void exibirTabuleiro() {
         System.out.println();
         // Exibe o número das colunas no topo (1 a N)
@@ -48,29 +49,69 @@ public class Board {
         }
         System.out.println();
     }
-    public boolean posicaoVazia(int l, int c){
-        if (l>=0 && l<linha && c>=0 && c < coluna){
+
+    public boolean posicaoVazia(int l, int c) {
+        if (l >= 0 && l < linha && c >= 0 && c < coluna) {
             return tabuleiro[l][c] == ' ';
         }
         return false;
     }
-    public boolean marcarPosicao(int l, int c, char simbolo){
-        if (posicaoVazia(l,c)){
+
+    public boolean marcarPosicao(int l, int c, char simbolo) {
+        if (posicaoVazia(l, c)) {
             this.tabuleiro[l][c] = simbolo;
             return true;
         }
         return false;
     }
+
+    public int marcarECapturar(int l, int c, char simbolo) {
+        if (!posicaoVazia(l, c)) return 0;
+
+        this.tabuleiro[l][c] = simbolo;
+        int eliminadas = 0;
+
+        char oponente = (simbolo == 'X') ? 'O' : 'X';
+        int[][] direcoes = {
+                {0, 1}, {0, -1}, {1, 0}, {-1, 0}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
+        };
+
+        for (int[] d : direcoes) {
+            int dr = d[0], dc = d[1];
+            int rAdj = l + dr;
+            int cAdj = c + dc;
+            int rSandwich = l + 2 * dr;
+            int cSandwich = c + 2 * dc;
+
+            // Se tem uma peça do oponente ao lado e uma peça do jogador logo depois
+            if (posicaoValida(rAdj, cAdj) && tabuleiro[rAdj][cAdj] == oponente &&
+                    posicaoValida(rSandwich, cSandwich) && tabuleiro[rSandwich][cSandwich] == simbolo) {
+
+                // ELIMINA a peça do oponente (remove do tabuleiro)
+                tabuleiro[rAdj][cAdj] = ' ';
+                eliminadas++;
+            }
+        }
+        return eliminadas;
+    }
+
+    private boolean posicaoValida(int r, int c) {
+        return r >= 0 && r < linha && c >= 0 && c < coluna;
+    }
+
     public char getPosicao(int l, int c) {
         return this.tabuleiro[l][c];
     }
-    public int getLinha(){
+
+    public int getLinha() {
         return this.linha;
     }
-    public int getColuna(){
+
+    public int getColuna() {
         return this.coluna;
     }
-    public char getSimbolo(int l, int c){
+
+    public char getSimbolo(int l, int c) {
         return this.tabuleiro[l][c];
     }
 }

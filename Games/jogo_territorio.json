@@ -1,0 +1,17 @@
+{
+  "jogo": "Domínio e Captura de Território",
+  "tabuleiro": {
+    "linhas": 5,
+    "colunas": 5
+  },
+  "jogador": {
+    "quantidadedeJogador": 2,
+    "simbolo": ["X", "O"]
+  },
+  "regras": {
+    "condicaodeVitoria": {
+      "tipo": "ELIMINATION",
+      "quantidade": 3
+    }
+  }
+}

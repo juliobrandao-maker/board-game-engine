@@ -14,6 +14,10 @@ public class WinConditionFactory {
             case "CANTOS":
             case "CORNERS":
                 return new CantosWinCondition();
+            case "ELIMINACAO":
+            case "ELIMINATION":
+            case "MAIORIA":
+                return new EliminationWinCondition(config.getQuantidade());
 
             default:
                 throw new ConfiguraçãoIvalidaException("Regra de vitória '" + config.getTipo() + "' não reconhecida.");
