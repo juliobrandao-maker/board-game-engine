@@ -1,21 +1,27 @@
 # Board Game Engine
 
-Engine extensível para jogos de tabuleiro desenvolvida em Java como parte da disciplina de Linguagem de Programação Orientada a Objetos.
+Engine genérica e extensível para jogos de tabuleiro desenvolvida em Java como entrega final da disciplina de Linguagem de Programação Orientada a Objetos (LPOO).
 
-A Engine permite carregar e executar diferentes jogos de tabuleiro a partir de arquivos de configuração em formato JSON, sem a necessidade de modificar ou recompilar o código-fonte da aplicação.
+A Engine interpreta arquivos de configuração JSON e executa dinamicamente diferentes jogos de tabuleiro (como Jogo da Velha, Connect Four e variações customizadas), respeitando o princípio do Open/Closed (Aberto para extensão, fechado para modificação).
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
 * **Java 17+**
-* **Gson 2.10+** (para desserialização dos arquivos JSON)
+* **Gson 2.10+** (Desserialização dinâmica de JSON)
 
 ---
 
-## 🏗️ Arquitetura da Engine
+## 🏗️ Padrões de Projeto Aplicados
 
-A solução utiliza **Polimorfismo**, **Interfaces** e **Injeção de Dependências** para isolar as regras específicas de cada jogo dos componentes centrais da aplicação.
+1. **Strategy Pattern (`WinCondition`):** A verificação de vitória é encapsulada em uma interface. A Engine executa `verificarVitoria` de forma polimórfica, permitindo diferentes algoritmos (`AlinhamentoWinCondition`, `CantosWinCondition`) sem alterar o motor principal.
+2. **Factory Method (`WinConditionFactory`):** Responsável por mapear a string de tipo vinda do JSON para a implementação concreta correspondente, isolando a instanciação e validação de regras específicas.
+3. **Injeção de Dependência:** O motor `Game` recebe suas dependências (`Board`, `List<Player>`, `WinCondition`) prontas do ambiente de inicialização (`Main`).
+
+---
+
+## 📊 Diagrama de Classes UML
 
 ```mermaid
 classDiagram
@@ -25,6 +31,7 @@ classDiagram
 
     class GameLoader {
         +LoadConfig(String caminho): GameConfig
+        -validarConfig(GameConfig config)
     }
 
     class GameConfig {
@@ -39,11 +46,14 @@ classDiagram
     }
 
     class Board {
-        -char[][] matriz
         -int linha
         -int coluna
-        +marcarPosicao(int l, int c, char s): boolean
+        -char[][] tabuleiro
         +exibirTabuleiro()
+        +posicaoVazia(int l, int c): boolean
+        +marcarPosicao(int l, int c, char simbolo): boolean
+        +getPosicao(int l, int c): char
+        +getSimbolo(int l, int c): char
     }
 
     class Player {
@@ -55,12 +65,20 @@ classDiagram
 
     class WinCondition {
         <<interface>>
-        +verificarVitoria(Board board, int linha, int coluna, char simbolo): boolean
+        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo): boolean
     }
 
     class AlinhamentoWinCondition {
-        -int quantidade
-        +verificarVitoria(Board board, int linha, int coluna, char simbolo): boolean
+        -int meta
+        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo): boolean
+    }
+
+    class CantosWinCondition {
+        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo): boolean
+    }
+
+    class WinConditionFactory {
+        +criar(CondicaodeVitoriaConfig config): WinCondition
     }
 
     class Game {
@@ -68,17 +86,21 @@ classDiagram
         -List~Player~ jogadores
         -GameConfig config
         -WinCondition winCondition
+        -Player jogadoratual
         +iniciarJogo(Scanner sc)
     }
 
-    class ConfiguraçãoinvalidaException {
+    class ConfiguraçãoIvalidaException {
+        +ConfiguraçãoIvalidaException(String mensagem)
     }
 
     WinCondition <|.. AlinhamentoWinCondition : implementa
-    Game --> Board : possui
-    Game --> Player : possui
+    WinCondition <|.. CantosWinCondition : implementa
+    Game --> Board : composto por
+    Game --> Player : possui N
     Game --> WinCondition : utiliza
-    GameLoader --> GameConfig : cria
-    Main --> GameLoader : invoca
-    Main --> Game : instancia
-    GameLoader ..> ConfiguraçãoinvalidaException : lança
+    WinConditionFactory ..> WinCondition : instancia
+    Main --> GameLoader : carrega config
+    Main --> WinConditionFactory : solicita regra
+    Main --> Game : inicia
+    GameLoader ..> ConfiguraçãoIvalidaException : lança
