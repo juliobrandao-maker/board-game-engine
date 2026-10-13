@@ -14,25 +14,39 @@ public class Board {
             }
         }
     }
-    public void exibirTabuleiro(){
+    public void exibirTabuleiro() {
+        System.out.println();
+        // Exibe o número das colunas no topo (1 a N)
+        System.out.print("    ");
+        for (int j = 0; j < coluna; j++) {
+            System.out.print(" " + (j + 1) + "  ");
+        }
+        System.out.println();
+
         for (int i = 0; i < linha; i++) {
+            // Exibe o número da linha na lateral esquerda (1 a N)
+            System.out.print(" " + (i + 1) + " ");
             for (int j = 0; j < coluna; j++) {
-                System.out.print(" " +this.tabuleiro[i][j] + " ");
+                System.out.print(" " + this.tabuleiro[i][j] + " ");
                 if (j < coluna - 1) {
                     System.out.print("|");
                 }
             }
             System.out.println();
-            if (i<linha-1){
-                for (int k = 0; k<coluna;k++){
+
+            // Linha divisória
+            if (i < linha - 1) {
+                System.out.print("   ");
+                for (int k = 0; k < coluna; k++) {
                     System.out.print("---");
-                    if (k<coluna-1){
+                    if (k < coluna - 1) {
                         System.out.print("+");
                     }
                 }
                 System.out.println();
             }
         }
+        System.out.println();
     }
     public boolean posicaoVazia(int l, int c){
         if (l>=0 && l<linha && c>=0 && c < coluna){
