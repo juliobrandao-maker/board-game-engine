@@ -1,27 +1,22 @@
-# Board Game Engine
+# 🧩 Board Game Engine — Linguagem de Programação Orientada a Objetos (UPE/POLI 2026.2)
 
-Engine genérica e extensível para jogos de tabuleiro desenvolvida em Java como entrega final da disciplina de Linguagem de Programação Orientada a Objetos (LPOO).
-
-A Engine interpreta arquivos de configuração JSON e executa dinamicamente diferentes jogos de tabuleiro (como Jogo da Velha, Connect Four e variações customizadas), respeitando o princípio do Open/Closed (Aberto para extensão, fechado para modificação).
+Uma **Game Engine** reutilizável, extensível e genérica em Java projetada para interpretar arquivos de configuração JSON e executar múltiplos jogos de tabuleiro no terminal, sem necessidade de alterar ou recompilar o código-fonte da aplicação.
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 🏛️ Arquitetura e Conceitos de POO Aplicados
 
-* **Java 17+**
-* **Gson 2.10+** (Desserialização dinâmica de JSON)
+A arquitetura foi desenvolvida respeitando a separação clara de responsabilidades entre o **Motor (Engine)** e os **Dados (Configuração JSON)**:
 
----
-
-## 🏗️ Padrões de Projeto Aplicados
-
-1. **Strategy Pattern (`WinCondition`):** A verificação de vitória é encapsulada em uma interface. A Engine executa `verificarVitoria` de forma polimórfica, permitindo diferentes algoritmos (`AlinhamentoWinCondition`, `CantosWinCondition`) sem alterar o motor principal.
-2. **Factory Method (`WinConditionFactory`):** Responsável por mapear a string de tipo vinda do JSON para a implementação concreta correspondente, isolando a instanciação e validação de regras específicas.
-3. **Injeção de Dependência:** O motor `Game` recebe suas dependências (`Board`, `List<Player>`, `WinCondition`) prontas do ambiente de inicialização (`Main`).
+- **Abstração e Polimorfismo (`WinCondition`)**: O motor `Game` executa o loop da partida e valida vitórias por meio do contrato genérico da interface `WinCondition`, permanecendo agnóstico em relação às regras concretas.
+- **Padrão de Criação Factory (`WinConditionFactory`)**: Mapeia e instancia dinamicamente as regras de vitória com base no parâmetro `tipo` informado no JSON.
+- **Mapeamento Flexível (`GameConfig` & Gson)**: Utiliza anotações `@SerializedName(alternate = ...)` para aceitar arquivos JSON configurados tanto em português (`linhas`, `colunas`, `jogador`) quanto em inglês (`rows`, `columns`, `players`).
+- **Encapsulamento e Integridade (`Board`)**: Protege o estado interno da matriz e valida limites de coordenadas, casas vazias e adjacências de peças.
+- **Tratamento Resiliente de Exceções**: A classe `GameLoader` valida a estrutura do JSON e lança `ConfiguraçãoIvalidaException` para exibir mensagens amigáveis ao usuário, impedindo que o programa interrompa por *stack trace*.
 
 ---
 
-## 📊 Diagrama de Classes UML
+## 📐 Diagrama de Classes (Mermaid)
 
 ```mermaid
 classDiagram
@@ -30,55 +25,70 @@ classDiagram
     }
 
     class GameLoader {
-        +LoadConfig(String caminho): GameConfig
+        +LoadConfig(String caminhoArquivo) GameConfig
         -validarConfig(GameConfig config)
     }
 
     class GameConfig {
-        -String jogo
-        -TabuleiroConfig tabuleiro
-        -PlayerConfig jogador
-        -RegrasConfig regras
-        +getJogo(): String
-        +getTabuleiro(): TabuleiroConfig
-        +getJogador(): PlayerConfig
-        +getRegras(): RegrasConfig
+        +getJogo() String
+        +getTabuleiro() TabuleiroConfig
+        +getJogador() PlayerConfig
+        +getRegras() RegrasConfig
+    }
+
+    class WinCondition {
+        <<interface>>
+        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo)* boolean
+    }
+
+    class AlinhamentoWinCondition {
+        -int meta
+        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo) boolean
+    }
+
+    class CantosWinCondition {
+        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo) boolean
+    }
+
+    class EliminationWinCondition {
+        -int metaCapturas
+        -Map~Character, Integer~ pontuacaoCapturas
+        +registrarCaptura(char simbolo, int quantidade)
+        +getCapturas(char simbolo) int
+        +getMetaCapturas() int
+        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo) boolean
+    }
+
+    class ReachPositionWinCondition {
+        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo) boolean
+    }
+
+    class WinConditionFactory {
+        +criar(CondicaodeVitoriaConfig config) WinCondition
     }
 
     class Board {
         -int linha
         -int coluna
         -char[][] tabuleiro
+        +posicionarPecasIniciaisAleatorias(char simboloP1, char simboloP2)
         +exibirTabuleiro()
-        +posicaoVazia(int l, int c): boolean
-        +marcarPosicao(int l, int c, char simbolo): boolean
-        +getPosicao(int l, int c): char
-        +getSimbolo(int l, int c): char
+        +posicaoVazia(int l, int c) boolean
+        +ePosicaoAdjacenteAoSimboloValida(int l, int c, char simbolo) boolean
+        +marcarPosicao(int l, int c, char simbolo) boolean
+        +marcarECapturar(int l, int c, char simbolo) int
+        +posicaoValida(int r, int c) boolean
+        +getPosicao(int l, int c) char
+        +getLinha() int
+        +getColuna() int
+        +getSimbolo(int l, int c) char
     }
 
     class Player {
         -String nome
         -char simbolo
-        +getNome(): String
-        +getSimbolo(): char
-    }
-
-    class WinCondition {
-        <<interface>>
-        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo): boolean
-    }
-
-    class AlinhamentoWinCondition {
-        -int meta
-        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo): boolean
-    }
-
-    class CantosWinCondition {
-        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo): boolean
-    }
-
-    class WinConditionFactory {
-        +criar(CondicaodeVitoriaConfig config): WinCondition
+        +getNome() String
+        +getSimbolo() char
     }
 
     class Game {
@@ -94,13 +104,22 @@ classDiagram
         +ConfiguraçãoIvalidaException(String mensagem)
     }
 
-    WinCondition <|.. AlinhamentoWinCondition : implementa
-    WinCondition <|.. CantosWinCondition : implementa
-    Game --> Board : composto por
-    Game --> Player : possui N
-    Game --> WinCondition : utiliza
-    WinConditionFactory ..> WinCondition : instancia
-    Main --> GameLoader : carrega config
-    Main --> WinConditionFactory : solicita regra
-    Main --> Game : inicia
-    GameLoader ..> ConfiguraçãoIvalidaException : lança
+    class MovimentaçãoInvalidaException {
+        +MovimentaçãoInvalidaException(String mensagem)
+    }
+
+    Main ..> GameLoader
+    Main ..> WinConditionFactory
+    Main ..> Game
+    GameLoader ..> GameConfig
+    GameLoader ..> ConfiguraçãoIvalidaException
+    WinConditionFactory ..> WinCondition
+    WinConditionFactory ..> ConfiguraçãoIvalidaException
+    WinCondition <|.. AlinhamentoWinCondition
+    WinCondition <|.. CantosWinCondition
+    WinCondition <|.. EliminationWinCondition
+    WinCondition <|.. ReachPositionWinCondition
+    Game --> Board
+    Game --> Player
+    Game --> GameConfig
+    Game --> WinCondition
