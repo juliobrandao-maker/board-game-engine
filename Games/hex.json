@@ -1,0 +1,17 @@
+{
+  "jogo": "Hex (Conexão de Bordas)",
+  "descricao": "Clássico jogo matemático em grade 7x7 onde o empate é impossível.\nColoque uma peça por turno para formar uma ponte contínua (em 6 direções hexagonais) ligando seus dois lados do tabuleiro.\nJogador 1 conecta Topo ↔ Base | Jogador 2 conecta Esquerda ↔ Direita.",
+  "tabuleiro": {
+    "linhas": 7,
+    "colunas": 7
+  },
+  "jogador": {
+    "quantidadedeJogador": 2,
+    "simbolo": ["X", "O"]
+  },
+  "regras": {
+    "condicaodeVitoria": {
+      "tipo": "HEX"
+    }
+  }
+}

@@ -1,3 +1,7 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class AlinhamentoWinCondition implements WinCondition {
     private int meta;
 
@@ -7,37 +11,51 @@ public class AlinhamentoWinCondition implements WinCondition {
 
     @Override
     public String getDescricaoRegras() {
-        return "Posicione uma peça por turno em qualquer casa vazia.\n" +
+        return "Posicione uma peça por turno no tabuleiro.\n" +
                 "Objetivo: Alinhe " + meta + " peças consecutivas do seu símbolo na horizontal, vertical ou diagonal.";
     }
 
     @Override
     public boolean verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo) {
-        return checarDirecao(tabuleiro, ultimaLinha, ultimaColuna, 0, 1, simbolo) ||
-                checarDirecao(tabuleiro, ultimaLinha, ultimaColuna, 1, 0, simbolo) ||
-                checarDirecao(tabuleiro, ultimaLinha, ultimaColuna, 1, 1, simbolo) ||
-                checarDirecao(tabuleiro, ultimaLinha, ultimaColuna, 1, -1, simbolo);
+        return !obterCaminhoVitoria(tabuleiro, ultimaLinha, ultimaColuna, simbolo).isEmpty();
     }
 
-    private boolean checarDirecao(Board tabuleiro, int r, int c, int dr, int dc, char simbolo) {
-        int contagem = 1;
-        contagem += contarEmDirecao(tabuleiro, r, c, dr, dc, simbolo);
-        contagem += contarEmDirecao(tabuleiro, r, c, -dr, -dc, simbolo);
-        return contagem >= meta;
+    @Override
+    public List<int[]> obterCaminhoVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo) {
+        int[][] eixos = {
+                {0, 1}, {1, 0}, {1, 1}, {1, -1}
+        };
+
+        for (int[] eixo : eixos) {
+            List<int[]> linhaCompleta = coletarNaDirecao(tabuleiro, ultimaLinha, ultimaColuna, eixo[0], eixo[1], simbolo);
+            if (linhaCompleta.size() >= meta) {
+                return linhaCompleta;
+            }
+        }
+        return Collections.emptyList();
     }
 
-    private int contarEmDirecao(Board tabuleiro, int r, int c, int dr, int dc, char simbolo) {
-        int contagem = 0;
-        int nr = r + dr;
-        int nc = c + dc;
+    private List<int[]> coletarNaDirecao(Board tabuleiro, int r, int c, int dr, int dc, char simbolo) {
+        List<int[]> antes = new ArrayList<>();
+        int nr = r - dr;
+        int nc = c - dc;
+        while (tabuleiro.posicaoValida(nr, nc) && tabuleiro.getSimbolo(nr, nc) == simbolo) {
+            antes.add(new int[]{nr, nc});
+            nr -= dr;
+            nc -= dc;
+        }
+        Collections.reverse(antes);
 
-        while (nr >= 0 && nr < tabuleiro.getLinha() &&
-                nc >= 0 && nc < tabuleiro.getColuna() &&
-                tabuleiro.getSimbolo(nr, nc) == simbolo) {
-            contagem++;
+        List<int[]> resultado = new ArrayList<>(antes);
+        resultado.add(new int[]{r, c});
+
+        nr = r + dr;
+        nc = c + dc;
+        while (tabuleiro.posicaoValida(nr, nc) && tabuleiro.getSimbolo(nr, nc) == simbolo) {
+            resultado.add(new int[]{nr, nc});
             nr += dr;
             nc += dc;
         }
-        return contagem;
+        return resultado;
     }
 }

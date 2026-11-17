@@ -1,34 +1,37 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class GameGUI extends JFrame {
     private CardLayout cardLayout;
     private JPanel painelPrincipal;
 
-    // Estado atual da partida na GUI
     private GameConfig configAtual;
     private Game jogoAtual;
     private List<JTextField> camposNomesJogadores;
     private JPanel painelInputsJogadores;
 
-    // Componentes da Tela de Regras
     private JLabel lblTituloRegras;
     private JTextArea txtAreaRegras;
 
-    // Componentes da Tela do Tabuleiro
     private JLabel lblTituloJogo;
     private JLabel lblTurno;
     private JLabel lblPlacar;
     private JLabel lblStatus;
-    private JPanel painelGrade;
+    private PainelTabuleiroVisual painelGrade;
     private JButton[][] botoesTabuleiro;
     private boolean partidaEncerrada;
 
-    // Paleta de cores moderna
+    private int hoverLinha = -1;
+    private int hoverColuna = -1;
+    private List<int[]> caminhoVitoriaAtual = Collections.emptyList();
+
     private static final Color COR_FUNDO = new Color(245, 247, 250);
     private static final Color COR_PRIMARIA = new Color(30, 64, 175);
     private static final Color COR_SUCESSO = new Color(22, 163, 74);
@@ -43,8 +46,8 @@ public class GameGUI extends JFrame {
     public GameGUI() {
         super("Board Game Engine — UPE/POLI");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(760, 680);
-        setMinimumSize(new Dimension(600, 540));
+        setSize(780, 700);
+        setMinimumSize(new Dimension(620, 560));
         setLocationRelativeTo(null);
 
         cardLayout = new CardLayout();
@@ -59,9 +62,6 @@ public class GameGUI extends JFrame {
         cardLayout.show(painelPrincipal, "SELECAO");
     }
 
-    // =========================================================
-    // TELA 1: SELEÇÃO DO ARQUIVO DE CONFIGURAÇÃO (.JSON)
-    // =========================================================
     private JPanel criarTelaSelecao() {
         JPanel painel = new JPanel(new BorderLayout(15, 15));
         painel.setBackground(COR_FUNDO);
@@ -154,7 +154,6 @@ public class GameGUI extends JFrame {
     private void processarArquivoConfig(String caminho) {
         try {
             this.configAtual = GameLoader.LoadConfig(caminho);
-            // Valida desde já se a WinCondition existe na Factory
             WinConditionFactory.criar(configAtual.getRegras().getCondicaodeVitoria());
             prepararCamposCadastroJogadores();
             cardLayout.show(painelPrincipal, "CADASTRO");
@@ -168,9 +167,6 @@ public class GameGUI extends JFrame {
         }
     }
 
-    // =========================================================
-    // TELA 2: CADASTRO DINÂMICO DE JOGADORES
-    // =========================================================
     private JPanel criarTelaCadastro() {
         JPanel painel = new JPanel(new BorderLayout(15, 15));
         painel.setBackground(COR_FUNDO);
@@ -274,9 +270,6 @@ public class GameGUI extends JFrame {
         }
     }
 
-    // =========================================================
-    // TELA 3: PAINEL DE REGRAS ANTES DE INICIAR O JOGO
-    // =========================================================
     private JPanel criarTelaRegras() {
         JPanel painel = new JPanel(new BorderLayout(15, 15));
         painel.setBackground(COR_FUNDO);
@@ -317,9 +310,6 @@ public class GameGUI extends JFrame {
         return painel;
     }
 
-    // =========================================================
-    // TELA 4: TABULEIRO INTERATIVO DINÂMICO
-    // =========================================================
     private JPanel criarTelaJogo() {
         JPanel painel = new JPanel(new BorderLayout(10, 10));
         painel.setBackground(COR_FUNDO);
@@ -344,9 +334,9 @@ public class GameGUI extends JFrame {
         topo.add(lblPlacar);
         painel.add(topo, BorderLayout.NORTH);
 
-        painelGrade = new JPanel();
+        painelGrade = new PainelTabuleiroVisual();
         painelGrade.setBackground(new Color(203, 213, 225));
-        painelGrade.setBorder(new EmptyBorder(8, 8, 8, 8));
+        painelGrade.setBorder(new EmptyBorder(10, 10, 10, 10));
         painel.add(painelGrade, BorderLayout.CENTER);
 
         JPanel inferior = new JPanel(new BorderLayout(10, 10));
@@ -385,11 +375,16 @@ public class GameGUI extends JFrame {
         int colunas = board.getColuna();
 
         this.partidaEncerrada = false;
+        this.hoverLinha = -1;
+        this.hoverColuna = -1;
+        this.caminhoVitoriaAtual = Collections.emptyList();
+
         painelGrade.removeAll();
-        painelGrade.setLayout(new GridLayout(linhas, colunas, 6, 6));
+        painelGrade.setLayout(new GridLayout(linhas, colunas, 4, 4));
         botoesTabuleiro = new JButton[linhas][colunas];
 
-        int tamanhoFonte = (Math.max(linhas, colunas) >= 10) ? 16 : 28;
+        int maiorDim = Math.max(linhas, colunas);
+        int tamanhoFonte = (maiorDim >= 12) ? 14 : (maiorDim >= 7 ? 20 : 28);
         Font fontePeca = new Font("SansSerif", Font.BOLD, tamanhoFonte);
 
         for (int i = 0; i < linhas; i++) {
@@ -400,10 +395,28 @@ public class GameGUI extends JFrame {
                 JButton btn = new JButton("");
                 btn.setFont(fontePeca);
                 btn.setFocusPainted(false);
+                btn.setMargin(new Insets(1, 1, 1, 1));
                 btn.setBackground(COR_CASA_VAZIA);
                 btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
                 btn.addActionListener(e -> processarJogadaVisual(r, c));
+                btn.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        hoverLinha = r;
+                        hoverColuna = c;
+                        painelGrade.repaint();
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        if (hoverLinha == r && hoverColuna == c) {
+                            hoverLinha = -1;
+                            hoverColuna = -1;
+                            painelGrade.repaint();
+                        }
+                    }
+                });
 
                 botoesTabuleiro[i][j] = btn;
                 painelGrade.add(btn);
@@ -427,37 +440,70 @@ public class GameGUI extends JFrame {
         char simbolo = atual.getSimbolo();
 
         try {
-            jogoAtual.validarMovimento(linha, coluna, simbolo);
-            jogoAtual.aplicarMovimento(linha, coluna, simbolo);
+            int[] destino = jogoAtual.resolverDestinoJogada(linha, coluna);
+            jogoAtual.validarMovimento(destino[0], destino[1], simbolo);
+            jogoAtual.aplicarMovimento(destino[0], destino[1], simbolo);
             atualizarTabuleiroVisual();
 
-            if (jogoAtual.verificarVitoriaAtual(linha, coluna)) {
+            String evento = jogoAtual.consumirUltimoEvento();
+
+            if (jogoAtual.verificarVitoriaAtual(destino[0], destino[1])) {
                 partidaEncerrada = true;
+                this.caminhoVitoriaAtual = jogoAtual.obterCaminhoVitoria(destino[0], destino[1]);
+                atualizarTabuleiroVisual();
+                painelGrade.repaint();
+
                 String msgVitoria = "PARABÉNS!! " + atual.getNome().toUpperCase() + " (" + simbolo + ") VENCEU A PARTIDA!";
                 lblTurno.setText(msgVitoria);
                 lblTurno.setForeground(COR_SUCESSO);
-                lblStatus.setText("Partida encerrada.");
+                lblStatus.setText(evento.isEmpty() ? "Partida encerrada." : evento);
                 lblPlacar.setText(jogoAtual.getTextoPlacar());
                 JOptionPane.showMessageDialog(this, msgVitoria, "Vitória!", JOptionPane.INFORMATION_MESSAGE);
             } else if (jogoAtual.tabuleiroCheio()) {
-                partidaEncerrada = true;
-                lblTurno.setText("O JOGO TERMINOU EM EMPATE!");
-                lblTurno.setForeground(Color.DARK_GRAY);
-                lblStatus.setText("Tabuleiro completo.");
-                JOptionPane.showMessageDialog(this, "O jogo terminou em empate!", "Empate", JOptionPane.INFORMATION_MESSAGE);
+                encerrarPartidaSemMovimentosVisual();
             } else {
                 jogoAtual.avancarTurno();
                 if (!jogoAtual.existeJogadaValidaPara(jogoAtual.getJogadorAtual().getSimbolo())) {
-                    partidaEncerrada = true;
-                    lblTurno.setText("SEM MOVIMENTOS VÁLIDOS! EMPATE!");
-                    JOptionPane.showMessageDialog(this, "Não há mais movimentos válidos. Empate!", "Empate", JOptionPane.INFORMATION_MESSAGE);
+                    String nomePassou = jogoAtual.getJogadorAtual().getNome();
+                    jogoAtual.avancarTurno();
+                    if (!jogoAtual.existeJogadaValidaPara(jogoAtual.getJogadorAtual().getSimbolo())) {
+                        encerrarPartidaSemMovimentosVisual();
+                    } else {
+                        String avisoPassou = nomePassou + " não possui jogadas válidas e passou a vez!";
+                        atualizarInterfacePartida(avisoPassou);
+                        JOptionPane.showMessageDialog(this, avisoPassou, "Passou a Vez", JOptionPane.INFORMATION_MESSAGE);
+                    }
                 } else {
-                    atualizarInterfacePartida("Última jogada: " + atual.getNome() + " em (" + (linha + 1) + ", " + (coluna + 1) + ")");
+                    String statusJogada = "Última jogada: " + atual.getNome() + " em (" + (destino[0] + 1) + ", " + (destino[1] + 1) + ")";
+                    if (!evento.isEmpty()) {
+                        statusJogada += " — " + evento;
+                    }
+                    atualizarInterfacePartida(statusJogada);
                 }
             }
         } catch (MovimentaçãoInvalidaException ex) {
             lblStatus.setText("Aviso: " + ex.getMessage());
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Jogada Inválida", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void encerrarPartidaSemMovimentosVisual() {
+        partidaEncerrada = true;
+        atualizarTabuleiroVisual();
+        lblPlacar.setText(jogoAtual.getTextoPlacar());
+        Player vencedorFinal = jogoAtual.obterVencedorFinal();
+
+        if (vencedorFinal != null) {
+            String msg = "FIM DE JOGO! VENCEDOR POR MAIORIA: " + vencedorFinal.getNome().toUpperCase() + " (" + vencedorFinal.getSimbolo() + ")!";
+            lblTurno.setText(msg);
+            lblTurno.setForeground(COR_SUCESSO);
+            lblStatus.setText("Partida encerrada.");
+            JOptionPane.showMessageDialog(this, msg, "Vitória por Maioria!", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            lblTurno.setText("O JOGO TERMINOU EM EMPATE!");
+            lblTurno.setForeground(Color.DARK_GRAY);
+            lblStatus.setText("Sem movimentos restantes.");
+            JOptionPane.showMessageDialog(this, "O jogo terminou em empate!", "Empate", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -468,6 +514,7 @@ public class GameGUI extends JFrame {
         lblTurno.setForeground(obterCorSimbolo(atual.getSimbolo()));
         lblPlacar.setText(jogoAtual.getTextoPlacar());
         lblStatus.setText(mensagemStatus);
+        painelGrade.repaint();
     }
 
     private void atualizarTabuleiroVisual() {
@@ -476,16 +523,25 @@ public class GameGUI extends JFrame {
             for (int j = 0; j < board.getColuna(); j++) {
                 char s = board.getSimbolo(i, j);
                 JButton btn = botoesTabuleiro[i][j];
+                boolean celulaVencedora = estaNoCaminhoVitoria(i, j);
+
                 if (s == ' ') {
                     btn.setText("");
                     btn.setBackground(COR_CASA_VAZIA);
                 } else {
                     btn.setText(String.valueOf(s));
                     btn.setForeground(obterCorSimbolo(s));
-                    btn.setBackground(new Color(241, 245, 249));
+                    btn.setBackground(celulaVencedora ? new Color(220, 252, 231) : new Color(241, 245, 249));
                 }
             }
         }
+    }
+
+    private boolean estaNoCaminhoVitoria(int r, int c) {
+        for (int[] pos : caminhoVitoriaAtual) {
+            if (pos[0] == r && pos[1] == c) return true;
+        }
+        return false;
     }
 
     private Color obterCorSimbolo(char simbolo) {
@@ -507,5 +563,97 @@ public class GameGUI extends JFrame {
         btn.setBorder(new EmptyBorder(10, 20, 10, 20));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return btn;
+    }
+
+    private class PainelTabuleiroVisual extends JPanel {
+        @Override
+        public void paint(Graphics g) {
+            super.paint(g);
+            if (jogoAtual == null || botoesTabuleiro == null) return;
+
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            // 1. Bordas coloridas indicativas (ex.: Topo/Base Azul e Esquerda/Direita Vermelho no Hex)
+            if (jogoAtual.mostrarBordasJogadores()) {
+                int espessura = 7;
+                int w = getWidth();
+                int h = getHeight();
+
+                Color corP1 = CORES_JOGADORES[0];
+                Color corP2 = CORES_JOGADORES[1];
+
+                g2.setColor(corP1);
+                g2.fillRect(0, 0, w, espessura);
+                g2.fillRect(0, h - espessura, w, espessura);
+
+                g2.setColor(corP2);
+                g2.fillRect(0, espessura, espessura, h - 2 * espessura);
+                g2.fillRect(w - espessura, espessura, espessura, h - 2 * espessura);
+            }
+
+            Board board = jogoAtual.getTabuleiro();
+
+            // 2. Linhas sólidas das conexões já formadas entre peças do mesmo jogador
+            List<int[]> conexoes = jogoAtual.obterConexoesVisuais();
+            g2.setStroke(new BasicStroke(4.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            for (int[] seg : conexoes) {
+                JButton b1 = botoesTabuleiro[seg[0]][seg[1]];
+                JButton b2 = botoesTabuleiro[seg[2]][seg[3]];
+                char simbolo = board.getSimbolo(seg[0], seg[1]);
+                Color base = obterCorSimbolo(simbolo);
+                g2.setColor(new Color(base.getRed(), base.getGreen(), base.getBlue(), 170));
+
+                int x1 = b1.getX() + b1.getWidth() / 2;
+                int y1 = b1.getY() + b1.getHeight() / 2;
+                int x2 = b2.getX() + b2.getWidth() / 2;
+                int y2 = b2.getY() + b2.getHeight() / 2;
+
+                g2.drawLine(x1, y1, x2, y2);
+                g2.fillOval(x1 - 4, y1 - 4, 8, 8);
+                g2.fillOval(x2 - 4, y2 - 4, 8, 8);
+            }
+
+            // 3. Preview tracejado ao passar o mouse em uma casa livre
+            if (!partidaEncerrada && hoverLinha >= 0 && hoverColuna >= 0) {
+                char simboloTurno = jogoAtual.getJogadorAtual().getSimbolo();
+                List<int[]> previews = jogoAtual.obterConexoesPreview(hoverLinha, hoverColuna, simboloTurno);
+                if (!previews.isEmpty()) {
+                    float[] tracejado = {6.0f, 6.0f};
+                    g2.setStroke(new BasicStroke(3.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10.0f, tracejado, 0.0f));
+                    Color base = obterCorSimbolo(simboloTurno);
+                    g2.setColor(new Color(base.getRed(), base.getGreen(), base.getBlue(), 185));
+
+                    for (int[] seg : previews) {
+                        JButton b1 = botoesTabuleiro[seg[0]][seg[1]];
+                        JButton b2 = botoesTabuleiro[seg[2]][seg[3]];
+                        int x1 = b1.getX() + b1.getWidth() / 2;
+                        int y1 = b1.getY() + b1.getHeight() / 2;
+                        int x2 = b2.getX() + b2.getWidth() / 2;
+                        int y2 = b2.getY() + b2.getHeight() / 2;
+                        g2.drawLine(x1, y1, x2, y2);
+                    }
+                }
+            }
+
+            // 4. Linha destacada da ponte/alinhamento vencedor ao encerrar a partida
+            if (caminhoVitoriaAtual != null && caminhoVitoriaAtual.size() >= 2) {
+                g2.setStroke(new BasicStroke(7.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2.setColor(new Color(22, 163, 74, 210));
+                for (int i = 0; i < caminhoVitoriaAtual.size() - 1; i++) {
+                    int[] pA = caminhoVitoriaAtual.get(i);
+                    int[] pB = caminhoVitoriaAtual.get(i + 1);
+                    JButton b1 = botoesTabuleiro[pA[0]][pA[1]];
+                    JButton b2 = botoesTabuleiro[pB[0]][pB[1]];
+                    int x1 = b1.getX() + b1.getWidth() / 2;
+                    int y1 = b1.getY() + b1.getHeight() / 2;
+                    int x2 = b2.getX() + b2.getWidth() / 2;
+                    int y2 = b2.getY() + b2.getHeight() / 2;
+                    g2.drawLine(x1, y1, x2, y2);
+                }
+            }
+
+            g2.dispose();
+        }
     }
 }

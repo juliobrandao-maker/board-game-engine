@@ -1,0 +1,18 @@
+{
+  "jogo": "Atari Go (Go de Captura)",
+  "descricao": "Versão tática do Go em tabuleiro 7x7.\nQuando um grupo conectado de peças inimigas ficar totalmente cercado (sem casas vazias ortogonais ao redor), todo o grupo é capturado!\nObjetivo: Seja o primeiro a capturar 5 peças do adversário.",
+  "tabuleiro": {
+    "linhas": 7,
+    "colunas": 7
+  },
+  "jogador": {
+    "quantidadedeJogador": 2,
+    "simbolo": ["P", "B"]
+  },
+  "regras": {
+    "condicaodeVitoria": {
+      "tipo": "ATARI_GO",
+      "quantidade": 5
+    }
+  }
+}

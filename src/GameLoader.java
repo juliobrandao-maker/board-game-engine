@@ -67,11 +67,14 @@ public class GameLoader {
                 throw new ConfiguraçãoIvalidaException("Meta de alinhamento inválida (" + meta + ") para um tabuleiro " + linhas + "x" + colunas + ".");
             }
         }
+        if ((tipo.equals("REVERSI") || tipo.equals("OTHELLO")) && (linhas < 4 || colunas < 4)) {
+            throw new ConfiguraçãoIvalidaException("Othello/Reversi exige um tabuleiro de pelo menos 4x4.");
+        }
 
         String pos = config.getRegras().getPosicionamento();
         if (pos != null && !pos.trim().isEmpty()) {
             String pNorm = pos.toUpperCase().trim();
-            if (!pNorm.equals("EMPTY_POSITION") && !pNorm.equals("ADJACENT_SYMBOL")) {
+            if (!pNorm.equals("EMPTY_POSITION") && !pNorm.equals("GRAVITY")) {
                 throw new ConfiguraçãoIvalidaException("Regra de posicionamento '" + pos + "' não reconhecida.");
             }
         }

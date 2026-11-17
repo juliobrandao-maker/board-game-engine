@@ -1,5 +1,3 @@
-import java.util.Random;
-
 public class Board {
     private int linha;
     private int coluna;
@@ -17,25 +15,24 @@ public class Board {
         }
     }
 
-    public void posicionarPecasIniciaisAleatorias(char simboloP1, char simboloP2) {
-        Random rand = new Random();
-        int colP1 = rand.nextInt(coluna);
-        int colP2 = rand.nextInt(coluna);
-
-        this.tabuleiro[0][colP1] = simboloP1;
-        this.tabuleiro[linha - 1][colP2] = simboloP2;
-    }
-
     public void exibirTabuleiro() {
         System.out.println();
         System.out.print("    ");
         for (int j = 0; j < coluna; j++) {
-            System.out.print(" " + (j + 1) + "  ");
+            if (j + 1 < 10) {
+                System.out.print(" " + (j + 1) + "  ");
+            } else {
+                System.out.print(" " + (j + 1) + " ");
+            }
         }
         System.out.println();
 
         for (int i = 0; i < linha; i++) {
-            System.out.print(" " + (i + 1) + " ");
+            if (i + 1 < 10) {
+                System.out.print(" " + (i + 1) + " ");
+            } else {
+                System.out.print((i + 1) + " ");
+            }
             for (int j = 0; j < coluna; j++) {
                 System.out.print(" " + this.tabuleiro[i][j] + " ");
                 if (j < coluna - 1) {
@@ -65,49 +62,36 @@ public class Board {
         return false;
     }
 
-    public boolean ePosicaoAdjacenteAoSimboloValida(int l, int c, char simbolo, int linhaBase) {
-        if (!posicaoVazia(l, c)) {
-            return false;
-        }
-
-        boolean temPecaNoTabuleiro = false;
-        for (int i = 0; i < linha; i++) {
-            for (int j = 0; j < coluna; j++) {
-                if (tabuleiro[i][j] == simbolo) {
-                    temPecaNoTabuleiro = true;
-                    break;
-                }
-            }
-            if (temPecaNoTabuleiro) break;
-        }
-
-        if (!temPecaNoTabuleiro) {
-            return l == linhaBase;
-        }
-
-        int[][] direcoes = {
-                {-1, -1}, {-1, 0}, {-1, 1},
-                { 0, -1},          { 0, 1},
-                { 1, -1}, { 1, 0}, { 1, 1}
-        };
-
-        for (int[] d : direcoes) {
-            int r = l + d[0];
-            int col = c + d[1];
-            if (posicaoValida(r, col) && tabuleiro[r][col] == simbolo) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public boolean marcarPosicao(int l, int c, char simbolo) {
         if (posicaoVazia(l, c)) {
             this.tabuleiro[l][c] = simbolo;
             return true;
         }
         return false;
+    }
+
+    public void definirSimbolo(int l, int c, char simbolo) {
+        if (posicaoValida(l, c)) {
+            this.tabuleiro[l][c] = simbolo;
+        }
+    }
+
+    public void limparPosicao(int l, int c) {
+        if (posicaoValida(l, c)) {
+            this.tabuleiro[l][c] = ' ';
+        }
+    }
+
+    public int contarPecas(char simbolo) {
+        int total = 0;
+        for (int i = 0; i < linha; i++) {
+            for (int j = 0; j < coluna; j++) {
+                if (this.tabuleiro[i][j] == simbolo) {
+                    total++;
+                }
+            }
+        }
+        return total;
     }
 
     public int marcarECapturar(int l, int c, char simbolo) {

@@ -1,0 +1,17 @@
+{
+  "jogo": "Othello / Reversi",
+  "descricao": "Inicia com 4 peças cruzadas no centro do tabuleiro 6x6.\nVocê só pode jogar em casas vazias que flanqueiem (cerquem) peças do oponente em linha reta ou diagonal, convertendo todas elas para o seu símbolo.\nSe um jogador não tiver jogadas válidas, passa a vez.\nObjetivo: Vence quem tiver a MAIORIA de peças no tabuleiro ao final da partida.",
+  "tabuleiro": {
+    "linhas": 6,
+    "colunas": 6
+  },
+  "jogador": {
+    "quantidadedeJogador": 2,
+    "simbolo": ["B", "W"]
+  },
+  "regras": {
+    "condicaodeVitoria": {
+      "tipo": "REVERSI"
+    }
+  }
+}

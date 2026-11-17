@@ -5,6 +5,7 @@ import java.util.Map;
 public class EliminationWinCondition implements WinCondition {
     private int metaCapturas;
     private Map<Character, Integer> pontuacaoCapturas = new HashMap<>();
+    private String ultimoEvento = "";
 
     public EliminationWinCondition(int metaCapturas) {
         this.metaCapturas = (metaCapturas > 0) ? metaCapturas : 3;
@@ -17,14 +18,18 @@ public class EliminationWinCondition implements WinCondition {
     @Override
     public void registrarCapturaExterna(char simbolo, int quantidade) {
         registrarCaptura(simbolo, quantidade);
+        this.ultimoEvento = "Capturou " + quantidade + " peça(s) do adversário!";
+    }
+
+    @Override
+    public String consumirUltimoEvento() {
+        String msg = this.ultimoEvento;
+        this.ultimoEvento = "";
+        return msg;
     }
 
     public int getCapturas(char simbolo) {
         return pontuacaoCapturas.getOrDefault(simbolo, 0);
-    }
-
-    public int getMetaCapturas() {
-        return metaCapturas;
     }
 
     @Override
@@ -39,12 +44,12 @@ public class EliminationWinCondition implements WinCondition {
         int capturadas = tabuleiro.marcarECapturar(linha, coluna, simbolo);
         if (capturadas > 0) {
             registrarCaptura(simbolo, capturadas);
-            System.out.println(" Jogada Incrível! Capturou " + capturadas + " peça(s) do adversário!\n");
+            this.ultimoEvento = "Capturou " + capturadas + " peça(s) do adversário!";
         }
     }
 
     @Override
-    public String getTextoPlacar(List<Player> jogadores) {
+    public String getTextoPlacar(List<Player> jogadores, Board tabuleiro) {
         StringBuilder sb = new StringBuilder("Placar de Capturas (Meta: " + metaCapturas + ") — ");
         for (int i = 0; i < jogadores.size(); i++) {
             Player p = jogadores.get(i);

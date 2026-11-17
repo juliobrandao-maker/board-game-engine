@@ -11,17 +11,23 @@ public class WinConditionFactory {
             case "ALINHAMENTO":
             case "ALIGNMENT":
                 return new AlinhamentoWinCondition(config.getQuantidade());
-            case "CANTOS":
-            case "CORNERS":
-                return new CantosWinCondition();
             case "ELIMINACAO":
             case "ELIMINATION":
-            case "MAIORIA":
                 return new EliminationWinCondition(config.getQuantidade());
-            case "REACH_POSITION":
-            case "POSICAO":
-            case "TRAVESSIA":
-                return new ReachPositionWinCondition();
+            case "REVERSI":
+            case "OTHELLO":
+            case "MAJORITY":
+            case "MAIORIA":
+                return new ReversiWinCondition();
+            case "HEX":
+            case "CONNECTION":
+            case "CONEXAO":
+                return new HexWinCondition();
+            case "ATARI_GO":
+            case "GO":
+            case "CAPTURE_GROUP":
+            case "CAPTURA_GRUPO":
+                return new AtariGoWinCondition(config.getQuantidade());
 
             default:
                 throw new ConfiguraçãoIvalidaException("Regra de vitória '" + config.getTipo() + "' não reconhecida.");

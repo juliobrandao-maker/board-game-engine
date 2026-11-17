@@ -22,23 +22,43 @@ public class Game {
     public GameConfig getConfig() { return config; }
     public Player getJogadorAtual() { return jogadoratual; }
 
+    public boolean usaGravidade() {
+        return "GRAVITY".equalsIgnoreCase(config.getRegras().getPosicionamento());
+    }
+
     public String getTextoPlacar() {
-        return winCondition.getTextoPlacar(jogadores);
+        return winCondition.getTextoPlacar(jogadores, tabuleiro);
+    }
+
+    public String consumirUltimoEvento() {
+        return winCondition.consumirUltimoEvento();
+    }
+
+    public Player obterVencedorFinal() {
+        return winCondition.verificarVencedorFinal(tabuleiro, jogadores);
+    }
+
+    public List<int[]> obterConexoesVisuais() {
+        return winCondition.obterConexoesVisuais(tabuleiro);
+    }
+
+    public List<int[]> obterConexoesPreview(int linha, int coluna, char simbolo) {
+        return winCondition.obterConexoesPreview(tabuleiro, linha, coluna, simbolo);
+    }
+
+    public List<int[]> obterCaminhoVitoria(int ultimaLinha, int ultimaColuna) {
+        return winCondition.obterCaminhoVitoria(tabuleiro, ultimaLinha, ultimaColuna, jogadoratual.getSimbolo());
+    }
+
+    public boolean mostrarBordasJogadores() {
+        return winCondition.mostrarBordasJogadores();
     }
 
     public void prepararPartida() {
         Random gerador = new Random();
         this.indexAtual = gerador.nextInt(jogadores.size());
         this.jogadoratual = jogadores.get(indexAtual);
-
-        // Inicialização polimórfica da regra de vitória
         winCondition.inicializarJogo(tabuleiro, jogadores);
-
-        if ("ADJACENT_SYMBOL".equalsIgnoreCase(config.getRegras().getPosicionamento())
-                && !(winCondition instanceof ReachPositionWinCondition)
-                && jogadores.size() >= 2) {
-            tabuleiro.posicionarPecasIniciaisAleatorias(jogadores.get(0).getSimbolo(), jogadores.get(1).getSimbolo());
-        }
     }
 
     public void avancarTurno() {
@@ -60,8 +80,8 @@ public class Game {
             textoRegras = config.getDescricao();
         } else {
             StringBuilder fallback = new StringBuilder(winCondition.getDescricaoRegras());
-            if ("ADJACENT_SYMBOL".equalsIgnoreCase(config.getRegras().getPosicionamento())) {
-                fallback.append("\nRegra extra: Posicionamento permitido apenas adjacente ao próprio símbolo.");
+            if (usaGravidade()) {
+                fallback.append("\nRegra extra: Gravidade ativada (a peça cai até a linha livre mais baixa da coluna).");
             }
             if ("SANDWICH".equalsIgnoreCase(config.getRegras().getCaptura())) {
                 fallback.append("\nRegra extra: Captura ativa por cerco (sanduíche).");
@@ -112,44 +132,60 @@ public class Game {
 
         while (jogoAtivo) {
             tabuleiro.exibirTabuleiro();
-            winCondition.exibirInfoPlacar(jogadores);
+            winCondition.exibirInfoPlacar(jogadores, tabuleiro);
 
             if (!existeJogadaValidaPara(jogadoratual.getSimbolo())) {
-                System.out.println("====================================");
-                System.out.println(" SEM MOVIMENTOS VÁLIDOS! EMPATE!");
-                System.out.println("====================================\n");
-                break;
+                String nomeSemJogada = jogadoratual.getNome();
+                avancarTurno();
+                if (!existeJogadaValidaPara(jogadoratual.getSimbolo())) {
+                    encerrarSemMovimentos();
+                    break;
+                } else {
+                    System.out.println(" " + nomeSemJogada + " não possui jogadas válidas e passou a vez para " + jogadoratual.getNome() + "!\n");
+                    continue;
+                }
             }
 
-            int linhaUser;
-            int colunaUser;
-
             try {
-                System.out.print("\n" + jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + "), digite a linha (1 a " + tabuleiro.getLinha() + "): ");
-                linhaUser = Integer.parseInt(sc.nextLine().trim());
+                int linhaInterna;
+                int colunaInterna;
 
-                System.out.print(jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + "), digite a coluna (1 a " + tabuleiro.getColuna() + "): ");
-                colunaUser = Integer.parseInt(sc.nextLine().trim());
+                if (usaGravidade()) {
+                    System.out.print("\n" + jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + "), digite a coluna (1 a " + tabuleiro.getColuna() + "): ");
+                    int colunaUser = Integer.parseInt(sc.nextLine().trim());
+                    linhaInterna = 0;
+                    colunaInterna = colunaUser - 1;
+                } else {
+                    System.out.print("\n" + jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + "), digite a linha (1 a " + tabuleiro.getLinha() + "): ");
+                    int linhaUser = Integer.parseInt(sc.nextLine().trim());
 
-                int linhaInterna = linhaUser - 1;
-                int colunaInterna = colunaUser - 1;
+                    System.out.print(jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + "), digite a coluna (1 a " + tabuleiro.getColuna() + "): ");
+                    int colunaUser = Integer.parseInt(sc.nextLine().trim());
 
-                validarMovimento(linhaInterna, colunaInterna, jogadoratual.getSimbolo());
+                    linhaInterna = linhaUser - 1;
+                    colunaInterna = colunaUser - 1;
+                }
+
+                int[] destino = resolverDestinoJogada(linhaInterna, colunaInterna);
+                validarMovimento(destino[0], destino[1], jogadoratual.getSimbolo());
 
                 limparTelaSeSuportado();
-                aplicarMovimento(linhaInterna, colunaInterna, jogadoratual.getSimbolo());
+                aplicarMovimento(destino[0], destino[1], jogadoratual.getSimbolo());
 
-                if (verificarVitoriaAtual(linhaInterna, colunaInterna)) {
+                String evento = consumirUltimoEvento();
+                if (!evento.isEmpty()) {
+                    System.out.println(" " + evento + "\n");
+                }
+
+                if (verificarVitoriaAtual(destino[0], destino[1])) {
                     tabuleiro.exibirTabuleiro();
+                    winCondition.exibirInfoPlacar(jogadores, tabuleiro);
                     System.out.println("====================================");
                     System.out.println(" PARABÉNS!! " + jogadoratual.getNome().toUpperCase() + " VENCEU A PARTIDA!");
                     System.out.println("====================================\n");
                     jogoAtivo = false;
                 } else if (tabuleiroCheio()) {
-                    tabuleiro.exibirTabuleiro();
-                    System.out.println("====================================");
-                    System.out.println(" O JOGO TERMINOU EM EMPATE!");
-                    System.out.println("====================================\n");
+                    encerrarSemMovimentos();
                     jogoAtivo = false;
                 } else {
                     avancarTurno();
@@ -165,6 +201,39 @@ public class Game {
         }
     }
 
+    private void encerrarSemMovimentos() {
+        tabuleiro.exibirTabuleiro();
+        winCondition.exibirInfoPlacar(jogadores, tabuleiro);
+        Player vencedorFinal = obterVencedorFinal();
+        System.out.println("====================================");
+        if (vencedorFinal != null) {
+            System.out.println(" FIM DE JOGO! VENCEDOR POR MAIORIA: " + vencedorFinal.getNome().toUpperCase() + "!");
+        } else {
+            System.out.println(" O JOGO TERMINOU EM EMPATE!");
+        }
+        System.out.println("====================================\n");
+    }
+
+    public int[] resolverDestinoJogada(int linha, int coluna) throws MovimentaçãoInvalidaException {
+        if (coluna < 0 || coluna >= tabuleiro.getColuna()) {
+            throw new MovimentaçãoInvalidaException("Coluna fora dos limites do tabuleiro! Tente novamente.");
+        }
+
+        if (usaGravidade()) {
+            for (int r = tabuleiro.getLinha() - 1; r >= 0; r--) {
+                if (tabuleiro.posicaoVazia(r, coluna)) {
+                    return new int[]{r, coluna};
+                }
+            }
+            throw new MovimentaçãoInvalidaException("Coluna cheia! Escolha outra coluna.");
+        }
+
+        if (!tabuleiro.posicaoValida(linha, coluna)) {
+            throw new MovimentaçãoInvalidaException("Posição fora dos limites do tabuleiro! Tente novamente.");
+        }
+        return new int[]{linha, coluna};
+    }
+
     public void validarMovimento(int linha, int coluna, char simbolo) throws MovimentaçãoInvalidaException {
         if (!tabuleiro.posicaoValida(linha, coluna)) {
             throw new MovimentaçãoInvalidaException("Posição fora dos limites do tabuleiro! Tente novamente.");
@@ -173,10 +242,7 @@ public class Game {
         String regraPos = config.getRegras().getPosicionamento();
         boolean valido;
 
-        if ("ADJACENT_SYMBOL".equalsIgnoreCase(regraPos)) {
-            int linhaBase = (simbolo == jogadores.get(0).getSimbolo()) ? 0 : (tabuleiro.getLinha() - 1);
-            valido = tabuleiro.ePosicaoAdjacenteAoSimboloValida(linha, coluna, simbolo, linhaBase);
-        } else if ("EMPTY_POSITION".equalsIgnoreCase(regraPos)) {
+        if ("EMPTY_POSITION".equalsIgnoreCase(regraPos) || "GRAVITY".equalsIgnoreCase(regraPos)) {
             valido = tabuleiro.posicaoVazia(linha, coluna);
         } else {
             valido = winCondition.eJogadaValida(tabuleiro, linha, coluna, simbolo);
@@ -194,7 +260,6 @@ public class Game {
             int capturadas = tabuleiro.marcarECapturar(linha, coluna, simbolo);
             if (capturadas > 0) {
                 winCondition.registrarCapturaExterna(simbolo, capturadas);
-                System.out.println(" Jogada Incrível! Capturou " + capturadas + " peça(s) do adversário!\n");
             }
         } else if ("NONE".equalsIgnoreCase(regraCap)) {
             tabuleiro.marcarPosicao(linha, coluna, simbolo);
@@ -207,10 +272,7 @@ public class Game {
         String regraPos = config.getRegras().getPosicionamento();
         for (int i = 0; i < tabuleiro.getLinha(); i++) {
             for (int j = 0; j < tabuleiro.getColuna(); j++) {
-                if ("ADJACENT_SYMBOL".equalsIgnoreCase(regraPos)) {
-                    int linhaBase = (simbolo == jogadores.get(0).getSimbolo()) ? 0 : (tabuleiro.getLinha() - 1);
-                    if (tabuleiro.ePosicaoAdjacenteAoSimboloValida(i, j, simbolo, linhaBase)) return true;
-                } else if ("EMPTY_POSITION".equalsIgnoreCase(regraPos)) {
+                if ("EMPTY_POSITION".equalsIgnoreCase(regraPos) || "GRAVITY".equalsIgnoreCase(regraPos)) {
                     if (tabuleiro.posicaoVazia(i, j)) return true;
                 } else {
                     if (winCondition.eJogadaValida(tabuleiro, i, j, simbolo)) return true;

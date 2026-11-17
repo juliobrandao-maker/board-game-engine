@@ -1,0 +1,18 @@
+{
+  "jogo": "Gomoku (5 em Linha)",
+  "descricao": "Clássico jogo oriental de estratégia em tabuleiro amplo 15x15.\nObjetivo: Seja o primeiro a formar uma linha contínua de 5 peças do seu símbolo na horizontal, vertical ou diagonal.",
+  "tabuleiro": {
+    "linhas": 15,
+    "colunas": 15
+  },
+  "jogador": {
+    "quantidadedeJogador": 2,
+    "simbolo": ["X", "O"]
+  },
+  "regras": {
+    "condicaodeVitoria": {
+      "tipo": "ALIGNMENT",
+      "quantidade": 5
+    }
+  }
+}
