@@ -1,12 +1,13 @@
 {
-  "jogo": "Conect Four",
-  "tabuleiro":{
+  "jogo": "Quadra 5x5",
+  "descricao": "Versão tática compacta em tabuleiro 5x5.\nObjetivo: Forme uma sequência contínua de 4 peças do seu símbolo em qualquer direção antes do adversário.",
+  "tabuleiro": {
     "linhas": 5,
     "colunas": 5
   },
-  "jogador":{
+  "jogador": {
     "quantidadedeJogador": 2,
-    "simbolo": ["A" , "B"]
+    "simbolo": ["A", "B"]
   },
   "regras": {
     "condicaodeVitoria": {

@@ -5,6 +5,9 @@ public class GameConfig {
     @SerializedName(value = "jogo", alternate = {"game", "nome"})
     private String jogo;
 
+    @SerializedName(value = "descricao", alternate = {"description", "regrasTexto", "comoJogar", "instructions"})
+    private String descricao;
+
     @SerializedName(value = "tabuleiro", alternate = {"board"})
     private TabuleiroConfig tabuleiro;
 
@@ -15,6 +18,7 @@ public class GameConfig {
     private RegrasConfig regras;
 
     public String getJogo() { return jogo; }
+    public String getDescricao() { return descricao; }
     public TabuleiroConfig getTabuleiro() { return tabuleiro; }
     public PlayerConfig getJogador() { return jogador; }
     public RegrasConfig getRegras() { return regras; }

@@ -1,13 +1,14 @@
 {
-  "jogo": "Jogo Da Velha",
-  "tabuleiro":{
-  "linhas": 3,
-  "colunas": 3
-},
-  "jogador":{
+  "jogo": "Jogo da Velha",
+  "descricao": "Cada jogador escolhe uma casa vazia por turno para marcar seu símbolo.\nObjetivo: Seja o primeiro a alinhar 3 símbolos iguais na horizontal, vertical ou diagonal.",
+  "tabuleiro": {
+    "linhas": 3,
+    "colunas": 3
+  },
+  "jogador": {
     "quantidadedeJogador": 2,
-    "simbolo": ["X" , "O"]
-},
+    "simbolo": ["X", "O"]
+  },
   "regras": {
     "condicaodeVitoria": {
       "tipo": "alinhamento",

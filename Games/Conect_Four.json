@@ -1,12 +1,13 @@
 {
-  "jogo": "Conect Four",
-  "tabuleiro":{
+  "jogo": "Connect Four",
+  "descricao": "Dispute espaço em um tabuleiro 6x7 posicionando uma peça por turno em qualquer casa livre.\nObjetivo: Conecte 4 peças consecutivas do seu símbolo na horizontal, vertical ou diagonal.",
+  "tabuleiro": {
     "linhas": 6,
     "colunas": 7
   },
-  "jogador":{
+  "jogador": {
     "quantidadedeJogador": 2,
-    "simbolo": ["R" , "Y"]
+    "simbolo": ["R", "Y"]
   },
   "regras": {
     "condicaodeVitoria": {

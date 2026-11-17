@@ -8,6 +8,7 @@ public class Game {
     private GameConfig config;
     private WinCondition winCondition;
     private Player jogadoratual;
+    private int indexAtual;
 
     public Game(Board tabuleiro, List<Player> jogadores, GameConfig config, WinCondition winCondition) {
         this.tabuleiro = tabuleiro;
@@ -16,20 +17,86 @@ public class Game {
         this.config = config;
     }
 
-    public void iniciarJogo(Scanner sc) {
+    public Board getTabuleiro() { return tabuleiro; }
+    public List<Player> getJogadores() { return jogadores; }
+    public GameConfig getConfig() { return config; }
+    public Player getJogadorAtual() { return jogadoratual; }
+
+    public String getTextoPlacar() {
+        return winCondition.getTextoPlacar(jogadores);
+    }
+
+    public void prepararPartida() {
         Random gerador = new Random();
-        int indexAtual = gerador.nextInt(jogadores.size());
+        this.indexAtual = gerador.nextInt(jogadores.size());
         this.jogadoratual = jogadores.get(indexAtual);
 
         // Inicialização polimórfica da regra de vitória
         winCondition.inicializarJogo(tabuleiro, jogadores);
 
-        // Se o JSON configurar explicitamente ADJACENT_SYMBOL em outra regra, inicializa peças base
         if ("ADJACENT_SYMBOL".equalsIgnoreCase(config.getRegras().getPosicionamento())
                 && !(winCondition instanceof ReachPositionWinCondition)
                 && jogadores.size() >= 2) {
             tabuleiro.posicionarPecasIniciaisAleatorias(jogadores.get(0).getSimbolo(), jogadores.get(1).getSimbolo());
         }
+    }
+
+    public void avancarTurno() {
+        indexAtual = (indexAtual + 1) % jogadores.size();
+        jogadoratual = jogadores.get(indexAtual);
+    }
+
+    public boolean verificarVitoriaAtual(int ultimaLinha, int ultimaColuna) {
+        return winCondition.verificarVitoria(tabuleiro, ultimaLinha, ultimaColuna, jogadoratual.getSimbolo());
+    }
+
+    public String obterResumoRegras() {
+        String titulo = (config.getJogo() != null && !config.getJogo().trim().isEmpty())
+                ? config.getJogo()
+                : "Jogo de Tabuleiro";
+
+        String textoRegras;
+        if (config.getDescricao() != null && !config.getDescricao().trim().isEmpty()) {
+            textoRegras = config.getDescricao();
+        } else {
+            StringBuilder fallback = new StringBuilder(winCondition.getDescricaoRegras());
+            if ("ADJACENT_SYMBOL".equalsIgnoreCase(config.getRegras().getPosicionamento())) {
+                fallback.append("\nRegra extra: Posicionamento permitido apenas adjacente ao próprio símbolo.");
+            }
+            if ("SANDWICH".equalsIgnoreCase(config.getRegras().getCaptura())) {
+                fallback.append("\nRegra extra: Captura ativa por cerco (sanduíche).");
+            }
+            textoRegras = fallback.toString();
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("JOGO: ").append(titulo).append("\n");
+        sb.append("TABULEIRO: ").append(tabuleiro.getLinha()).append("x").append(tabuleiro.getColuna()).append("\n");
+        sb.append("JOGADORES: ");
+        for (int i = 0; i < jogadores.size(); i++) {
+            Player p = jogadores.get(i);
+            sb.append(p.getNome()).append(" (").append(p.getSimbolo()).append(")");
+            if (i < jogadores.size() - 1) sb.append(" vs ");
+        }
+        sb.append("\n\nREGRAS E OBJETIVO:\n");
+        sb.append(textoRegras);
+        return sb.toString();
+    }
+
+    private void exibirPainelRegras(Scanner sc) {
+        limparTelaSeSuportado();
+        System.out.println("====================================================");
+        System.out.println("                 REGRAS DA PARTIDA                  ");
+        System.out.println("====================================================");
+        System.out.println(obterResumoRegras());
+        System.out.println("\n====================================================");
+        System.out.print("Pressione ENTER para continuar e iniciar a partida...");
+        sc.nextLine();
+    }
+
+    public void iniciarJogo(Scanner sc) {
+        prepararPartida();
+        exibirPainelRegras(sc);
 
         String tituloJogo = (config.getJogo() != null && !config.getJogo().trim().isEmpty())
                 ? config.getJogo().toUpperCase()
@@ -47,7 +114,6 @@ public class Game {
             tabuleiro.exibirTabuleiro();
             winCondition.exibirInfoPlacar(jogadores);
 
-            // Evita loop infinito caso o tabuleiro fique cheio ou o jogador não tenha movimentos válidos
             if (!existeJogadaValidaPara(jogadoratual.getSimbolo())) {
                 System.out.println("====================================");
                 System.out.println(" SEM MOVIMENTOS VÁLIDOS! EMPATE!");
@@ -73,7 +139,7 @@ public class Game {
                 limparTelaSeSuportado();
                 aplicarMovimento(linhaInterna, colunaInterna, jogadoratual.getSimbolo());
 
-                if (winCondition.verificarVitoria(tabuleiro, linhaInterna, colunaInterna, jogadoratual.getSimbolo())) {
+                if (verificarVitoriaAtual(linhaInterna, colunaInterna)) {
                     tabuleiro.exibirTabuleiro();
                     System.out.println("====================================");
                     System.out.println(" PARABÉNS!! " + jogadoratual.getNome().toUpperCase() + " VENCEU A PARTIDA!");
@@ -86,8 +152,7 @@ public class Game {
                     System.out.println("====================================\n");
                     jogoAtivo = false;
                 } else {
-                    indexAtual = (indexAtual + 1) % jogadores.size();
-                    jogadoratual = jogadores.get(indexAtual);
+                    avancarTurno();
                 }
 
             } catch (NumberFormatException e) {
@@ -100,7 +165,7 @@ public class Game {
         }
     }
 
-    private void validarMovimento(int linha, int coluna, char simbolo) throws MovimentaçãoInvalidaException {
+    public void validarMovimento(int linha, int coluna, char simbolo) throws MovimentaçãoInvalidaException {
         if (!tabuleiro.posicaoValida(linha, coluna)) {
             throw new MovimentaçãoInvalidaException("Posição fora dos limites do tabuleiro! Tente novamente.");
         }
@@ -122,15 +187,13 @@ public class Game {
         }
     }
 
-    private void aplicarMovimento(int linha, int coluna, char simbolo) {
+    public void aplicarMovimento(int linha, int coluna, char simbolo) {
         String regraCap = config.getRegras().getCaptura();
 
         if ("SANDWICH".equalsIgnoreCase(regraCap)) {
             int capturadas = tabuleiro.marcarECapturar(linha, coluna, simbolo);
             if (capturadas > 0) {
-                if (winCondition instanceof EliminationWinCondition) {
-                    ((EliminationWinCondition) winCondition).registrarCaptura(simbolo, capturadas);
-                }
+                winCondition.registrarCapturaExterna(simbolo, capturadas);
                 System.out.println(" Jogada Incrível! Capturou " + capturadas + " peça(s) do adversário!\n");
             }
         } else if ("NONE".equalsIgnoreCase(regraCap)) {
@@ -140,7 +203,7 @@ public class Game {
         }
     }
 
-    private boolean existeJogadaValidaPara(char simbolo) {
+    public boolean existeJogadaValidaPara(char simbolo) {
         String regraPos = config.getRegras().getPosicionamento();
         for (int i = 0; i < tabuleiro.getLinha(); i++) {
             for (int j = 0; j < tabuleiro.getColuna(); j++) {
@@ -157,7 +220,7 @@ public class Game {
         return false;
     }
 
-    private boolean tabuleiroCheio() {
+    public boolean tabuleiroCheio() {
         for (int i = 0; i < tabuleiro.getLinha(); i++) {
             for (int j = 0; j < tabuleiro.getColuna(); j++) {
                 if (tabuleiro.posicaoVazia(i, j)) return false;

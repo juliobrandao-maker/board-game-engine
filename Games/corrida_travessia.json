@@ -1,5 +1,6 @@
 {
   "jogo": "Travessia Tática (Breakthrough)",
+  "descricao": "Cada jogador inicia com 1 peça sorteada na sua linha de base (topo ou base).\nRegra de Posicionamento: Você só pode colocar novas peças em casas vazias ADJACENTES (8 direções) a uma peça sua.\nObjetivo: Construa um caminho conectado até a linha oposta do tabuleiro para vencer.",
   "tabuleiro": {
     "linhas": 5,
     "colunas": 5

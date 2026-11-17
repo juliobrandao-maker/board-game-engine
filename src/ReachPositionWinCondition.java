@@ -4,6 +4,13 @@ public class ReachPositionWinCondition implements WinCondition {
     private char simboloJogador1 = 'X';
 
     @Override
+    public String getDescricaoRegras() {
+        return "Cada jogador inicia com 1 peça na sua linha de base (topo ou base).\n" +
+                "Movimento: Coloque novas peças apenas em casas vazias ADJACENTES (8 direções) a uma peça sua.\n" +
+                "Objetivo: Construa um caminho conectado até a linha oposta do tabuleiro para vencer.";
+    }
+
+    @Override
     public void inicializarJogo(Board tabuleiro, List<Player> jogadores) {
         if (jogadores.size() >= 2) {
             this.simboloJogador1 = jogadores.get(0).getSimbolo();

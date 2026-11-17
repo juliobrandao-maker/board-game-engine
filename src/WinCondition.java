@@ -13,5 +13,20 @@ public interface WinCondition {
         tabuleiro.marcarPosicao(linha, coluna, simbolo);
     }
 
-    default void exibirInfoPlacar(List<Player> jogadores) {}
+    default void registrarCapturaExterna(char simbolo, int quantidade) {}
+
+    default String getTextoPlacar(List<Player> jogadores) {
+        return "";
+    }
+
+    default void exibirInfoPlacar(List<Player> jogadores) {
+        String placar = getTextoPlacar(jogadores);
+        if (!placar.isEmpty()) {
+            System.out.println(placar);
+        }
+    }
+
+    default String getDescricaoRegras() {
+        return "Posicione suas peças em casas vazias e cumpra o objetivo da partida para vencer.";
+    }
 }

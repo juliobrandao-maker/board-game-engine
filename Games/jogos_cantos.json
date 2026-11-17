@@ -1,4 +1,6 @@
 {
+  "jogo": "Jogo dos Cantos",
+  "descricao": "Controle as extremidades do tabuleiro marcando uma casa livre por turno.\nObjetivo: Ocupar simultaneamente os 4 cantos (quinas) do tabuleiro com o seu símbolo.",
   "tabuleiro": {
     "linhas": 3,
     "colunas": 3

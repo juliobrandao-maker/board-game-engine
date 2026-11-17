@@ -1,5 +1,6 @@
 {
   "jogo": "Domínio e Captura de Território",
+  "descricao": "Posicione peças estrategicamente para cercar o inimigo (Captura em Sanduíche).\nSempre que uma peça do oponente ficar entre duas peças suas (horizontal, vertical ou diagonal), ela é eliminada.\nObjetivo: Seja o primeiro a capturar 3 peças do adversário.",
   "tabuleiro": {
     "linhas": 5,
     "colunas": 5

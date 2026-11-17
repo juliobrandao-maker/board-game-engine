@@ -14,12 +14,24 @@ public class EliminationWinCondition implements WinCondition {
         pontuacaoCapturas.put(simbolo, pontuacaoCapturas.getOrDefault(simbolo, 0) + quantidade);
     }
 
+    @Override
+    public void registrarCapturaExterna(char simbolo, int quantidade) {
+        registrarCaptura(simbolo, quantidade);
+    }
+
     public int getCapturas(char simbolo) {
         return pontuacaoCapturas.getOrDefault(simbolo, 0);
     }
 
     public int getMetaCapturas() {
         return metaCapturas;
+    }
+
+    @Override
+    public String getDescricaoRegras() {
+        return "Posicione uma peça por turno para cercar o oponente (Captura em Sanduíche).\n" +
+                "Quando uma peça inimiga ficar entre duas peças suas, ela é capturada.\n" +
+                "Objetivo: Seja o primeiro a capturar " + metaCapturas + " peça(s) do adversário.";
     }
 
     @Override
@@ -32,12 +44,15 @@ public class EliminationWinCondition implements WinCondition {
     }
 
     @Override
-    public void exibirInfoPlacar(List<Player> jogadores) {
-        System.out.println("--- PLACAR DE CAPTURAS (Meta: " + metaCapturas + " peças) ---");
-        for (Player p : jogadores) {
-            System.out.println("  " + p.getNome() + " (" + p.getSimbolo() + "): " + getCapturas(p.getSimbolo()) + " captura(s)");
+    public String getTextoPlacar(List<Player> jogadores) {
+        StringBuilder sb = new StringBuilder("Placar de Capturas (Meta: " + metaCapturas + ") — ");
+        for (int i = 0; i < jogadores.size(); i++) {
+            Player p = jogadores.get(i);
+            sb.append(p.getNome()).append(" (").append(p.getSimbolo()).append("): ")
+                    .append(getCapturas(p.getSimbolo()));
+            if (i < jogadores.size() - 1) sb.append("  |  ");
         }
-        System.out.println("-----------------------------------------------------");
+        return sb.toString();
     }
 
     @Override
