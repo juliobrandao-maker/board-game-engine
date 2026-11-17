@@ -1,10 +1,21 @@
+import java.util.List;
+
 public class ReachPositionWinCondition implements WinCondition {
 
     @Override
+    public void inicializarJogo(Board tabuleiro, List<Player> jogadores) {
+        if (jogadores.size() >= 2) {
+            tabuleiro.posicionarPecasIniciaisAleatorias(jogadores.get(0).getSimbolo(), jogadores.get(1).getSimbolo());
+        }
+    }
+
+    @Override
+    public boolean eJogadaValida(Board tabuleiro, int linha, int coluna, char simbolo) {
+        return tabuleiro.ePosicaoAdjacenteAoSimboloValida(linha, coluna, simbolo);
+    }
+
+    @Override
     public boolean verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo) {
-        // Regra de Travessia:
-        // O jogador 'X' vence quando alcança a última linha (Linha 5 no UI / Índice N-1 na matriz)
-        // O jogador 'O' vence quando alcança a primeira linha (Linha 1 no UI / Índice 0 na matriz)
         if (simbolo == 'X') {
             return ultimaLinha == (tabuleiro.getLinha() - 1);
         } else {

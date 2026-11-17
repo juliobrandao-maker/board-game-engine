@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class EliminationWinCondition implements WinCondition {
@@ -19,6 +20,23 @@ public class EliminationWinCondition implements WinCondition {
 
     public int getMetaCapturas() {
         return metaCapturas;
+    }
+
+    @Override
+    public void aoRealizarJogada(Board tabuleiro, int linha, int coluna, char simbolo, int capturadas) {
+        if (capturadas > 0) {
+            registrarCaptura(simbolo, capturadas);
+            System.out.println(" Jogada Incrível! Capturou " + capturadas + " peça(s) do adversário!\n");
+        }
+    }
+
+    @Override
+    public void exibirInfoPlacar(List<Player> jogadores) {
+        System.out.println("--- PLACAR DE CAPTURAS (Meta: " + metaCapturas + " peças) ---");
+        for (Player p : jogadores) {
+            System.out.println("  " + p.getNome() + " (" + p.getSimbolo() + "): " + getCapturas(p.getSimbolo()) + " captura(s)");
+        }
+        System.out.println("-----------------------------------------------------");
     }
 
     @Override

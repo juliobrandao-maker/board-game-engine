@@ -21,10 +21,8 @@ public class Game {
         int indexAtual = gerador.nextInt(jogadores.size());
         this.jogadoratual = jogadores.get(indexAtual);
 
-        // Se for jogo de Travessia, posiciona 1 peça inicial aleatória para cada jogador
-        if (winCondition instanceof ReachPositionWinCondition) {
-            tabuleiro.posicionarPecasIniciaisAleatorias(jogadores.get(0).getSimbolo(), jogadores.get(1).getSimbolo());
-        }
+        // POLIMORFISMO: Cada regra inicializa o que for necessário para ela
+        winCondition.inicializarJogo(tabuleiro, jogadores);
 
         limparTelaSeSuportado();
         System.out.println("====================================");
@@ -39,15 +37,8 @@ public class Game {
         while (jogoAtivo) {
             tabuleiro.exibirTabuleiro();
 
-            // Exibe informação complementar no placar para jogos de eliminação
-            if (winCondition instanceof EliminationWinCondition) {
-                EliminationWinCondition ew = (EliminationWinCondition) winCondition;
-                System.out.println("--- PLACAR DE CAPTURAS (Meta: " + ew.getMetaCapturas() + " peças) ---");
-                for (Player p : jogadores) {
-                    System.out.println("  " + p.getNome() + " (" + p.getSimbolo() + "): " + ew.getCapturas(p.getSimbolo()) + " captura(s)");
-                }
-                System.out.println("-----------------------------------------------------");
-            }
+            // POLIMORFISMO: Exibe informação complementar no placar se a regra possuir
+            winCondition.exibirInfoPlacar(jogadores);
 
             int linhaUser = -1;
             int colunaUser = -1;
@@ -73,37 +64,20 @@ public class Game {
                 continue;
             }
 
-            // REGRAS DE POSICIONAMENTO
-            if (winCondition instanceof ReachPositionWinCondition) {
-                // Modo Travessia: Exige jogar adjacente a uma peça do seu próprio símbolo
-                if (!tabuleiro.ePosicaoAdjacenteAoSimboloValida(linhaInterna, colunaInterna, jogadoratual.getSimbolo())) {
-                    limparTelaSeSuportado();
-                    System.out.println(" Jogada Inválida! Você só pode colocar peças em casas vazias AO LADO de uma peça do seu próprio símbolo ('" + jogadoratual.getSimbolo() + "').\n");
-                    continue;
-                }
-            } else {
-                if (!tabuleiro.posicaoVazia(linhaInterna, colunaInterna)) {
-                    limparTelaSeSuportado();
-                    System.out.println(" Jogada inválida! Posição já ocupada.\n");
-                    continue;
-                }
+            // POLIMORFISMO: Delegado para a WinCondition validar a jogada
+            if (!winCondition.eJogadaValida(tabuleiro, linhaInterna, colunaInterna, jogadoratual.getSimbolo())) {
+                limparTelaSeSuportado();
+                System.out.println(" Jogada inválida para as regras deste jogo! Tente novamente.\n");
+                continue;
             }
 
-            // Executa a jogada testando capturas ativas/passivas
+            // Executa marcacao/captura e notifica a regra de forma polimorfica
             int capturadas = tabuleiro.marcarECapturar(linhaInterna, colunaInterna, jogadoratual.getSimbolo());
-
-            if (winCondition instanceof EliminationWinCondition && capturadas > 0) {
-                EliminationWinCondition ew = (EliminationWinCondition) winCondition;
-                ew.registrarCaptura(jogadoratual.getSimbolo(), capturadas);
-                limparTelaSeSuportado();
-                System.out.println(" Jogada Incrível! " + jogadoratual.getNome() + " capturou " + capturadas + " peça(s) do adversário!\n");
-            } else {
-                limparTelaSeSuportado();
-            }
+            winCondition.aoRealizarJogada(tabuleiro, linhaInterna, colunaInterna, jogadoratual.getSimbolo(), capturadas);
 
             jogadasValidas++;
 
-            // Verificação de Vitória
+            // POLIMORFISMO: Verificação de Vitória
             if (winCondition.verificarVitoria(tabuleiro, linhaInterna, colunaInterna, jogadoratual.getSimbolo())) {
                 tabuleiro.exibirTabuleiro();
                 System.out.println("====================================");
@@ -133,8 +107,6 @@ public class Game {
                     new ProcessBuilder("clear").inheritIO().start().waitFor();
                 }
             }
-        } catch (Exception e) {
-            // Fallback para IDE
-        }
+        } catch (Exception e) {}
     }
 }

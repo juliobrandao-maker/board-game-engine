@@ -17,11 +17,7 @@ public class Board {
         }
     }
 
-    /**
-     * Posiciona uma peça inicial para cada jogador em colunas aleatórias:
-     * - O primeiro jogador ('X') é posicionado na Linha 1 (índice 0) em uma coluna aleatória.
-     * - O segundo jogador ('O') é posicionado na última Linha (índice N-1) em uma coluna aleatória.
-     */
+
     public void posicionarPecasIniciaisAleatorias(char simboloP1, char simboloP2) {
         Random rand = new Random();
         int colP1 = rand.nextInt(coluna);
@@ -73,10 +69,7 @@ public class Board {
         return false;
     }
 
-    /**
-     * Valida se a posição escolhida é VAZIA e ADJACENTE a pelo menos
-     * uma peça do PRÓPRIO SÍMBOLO do jogador atual.
-     */
+
     public boolean ePosicaoAdjacenteAoSimboloValida(int l, int c, char simbolo) {
         if (!posicaoVazia(l, c)) {
             return false;
@@ -153,25 +146,6 @@ public class Board {
             }
         }
 
-        // 2. CAPTURA PASSIVA: Entrada voluntária em armadilha
-        int[][] paresOpostos = {
-                {0, 1, 0, -1},  // Horizontal
-                {1, 0, -1, 0},  // Vertical
-                {1, 1, -1, -1}, // Diagonal Principal
-                {1, -1, -1, 1}  // Diagonal Secundária
-        };
-
-        for (int[] p : paresOpostos) {
-            int r1 = l + p[0], c1 = c + p[1];
-            int r2 = l + p[2], c2 = p[3];
-
-            if (posicaoValida(r1, c1) && tabuleiro[r1][c1] == oponente &&
-                    posicaoValida(r2, c2) && tabuleiro[r2][c2] == oponente) {
-
-                tabuleiro[l][c] = ' '; // Peça é destruída na armadilha
-                break;
-            }
-        }
 
         return eliminadas;
     }
