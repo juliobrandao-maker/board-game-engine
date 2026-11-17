@@ -17,7 +17,6 @@ public class Board {
         }
     }
 
-
     public void posicionarPecasIniciaisAleatorias(char simboloP1, char simboloP2) {
         Random rand = new Random();
         int colP1 = rand.nextInt(coluna);
@@ -29,7 +28,6 @@ public class Board {
 
     public void exibirTabuleiro() {
         System.out.println();
-        // Exibe o número das colunas no topo (1 a N)
         System.out.print("    ");
         for (int j = 0; j < coluna; j++) {
             System.out.print(" " + (j + 1) + "  ");
@@ -37,7 +35,6 @@ public class Board {
         System.out.println();
 
         for (int i = 0; i < linha; i++) {
-            // Exibe o número da linha na lateral esquerda (1 a N)
             System.out.print(" " + (i + 1) + " ");
             for (int j = 0; j < coluna; j++) {
                 System.out.print(" " + this.tabuleiro[i][j] + " ");
@@ -47,7 +44,6 @@ public class Board {
             }
             System.out.println();
 
-            // Linha divisória
             if (i < linha - 1) {
                 System.out.print("   ");
                 for (int k = 0; k < coluna; k++) {
@@ -69,13 +65,11 @@ public class Board {
         return false;
     }
 
-
-    public boolean ePosicaoAdjacenteAoSimboloValida(int l, int c, char simbolo) {
+    public boolean ePosicaoAdjacenteAoSimboloValida(int l, int c, char simbolo, int linhaBase) {
         if (!posicaoVazia(l, c)) {
             return false;
         }
 
-        // Verifica se o jogador possui alguma peça ativa no tabuleiro
         boolean temPecaNoTabuleiro = false;
         for (int i = 0; i < linha; i++) {
             for (int j = 0; j < coluna; j++) {
@@ -87,13 +81,10 @@ public class Board {
             if (temPecaNoTabuleiro) break;
         }
 
-        // Se o jogador perdeu todas as peças por captura, pode recomeçar na sua linha de base
         if (!temPecaNoTabuleiro) {
-            int linhaBase = (simbolo == 'X') ? 0 : (linha - 1);
             return l == linhaBase;
         }
 
-        // Valida adjacência em 8 direções ao próprio símbolo
         int[][] direcoes = {
                 {-1, -1}, {-1, 0}, {-1, 1},
                 { 0, -1},          { 0, 1},
@@ -104,11 +95,11 @@ public class Board {
             int r = l + d[0];
             int col = c + d[1];
             if (posicaoValida(r, col) && tabuleiro[r][col] == simbolo) {
-                return true; // Encontrou vizinho do próprio símbolo
+                return true;
             }
         }
 
-        return false; // Tentativa de jogada isolada
+        return false;
     }
 
     public boolean marcarPosicao(int l, int c, char simbolo) {
@@ -124,9 +115,7 @@ public class Board {
 
         this.tabuleiro[l][c] = simbolo;
         int eliminadas = 0;
-        char oponente = (simbolo == 'X') ? 'O' : 'X';
 
-        // 1. CAPTURA ATIVA: Encurrala peça do oponente
         int[][] direcoes = {
                 {0, 1}, {0, -1}, {1, 0}, {-1, 0}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
         };
@@ -138,14 +127,14 @@ public class Board {
             int rSandwich = l + 2 * dr;
             int cSandwich = c + 2 * dc;
 
-            if (posicaoValida(rAdj, cAdj) && tabuleiro[rAdj][cAdj] == oponente &&
-                    posicaoValida(rSandwich, cSandwich) && tabuleiro[rSandwich][cSandwich] == simbolo) {
-
-                tabuleiro[rAdj][cAdj] = ' ';
-                eliminadas++;
+            if (posicaoValida(rAdj, cAdj) && posicaoValida(rSandwich, cSandwich)) {
+                char pecaAdj = tabuleiro[rAdj][cAdj];
+                if (pecaAdj != ' ' && pecaAdj != simbolo && tabuleiro[rSandwich][cSandwich] == simbolo) {
+                    tabuleiro[rAdj][cAdj] = ' ';
+                    eliminadas++;
+                }
             }
         }
-
 
         return eliminadas;
     }

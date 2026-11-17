@@ -23,7 +23,8 @@ public class EliminationWinCondition implements WinCondition {
     }
 
     @Override
-    public void aoRealizarJogada(Board tabuleiro, int linha, int coluna, char simbolo, int capturadas) {
+    public void executarJogada(Board tabuleiro, int linha, int coluna, char simbolo) {
+        int capturadas = tabuleiro.marcarECapturar(linha, coluna, simbolo);
         if (capturadas > 0) {
             registrarCaptura(simbolo, capturadas);
             System.out.println(" Jogada Incrível! Capturou " + capturadas + " peça(s) do adversário!\n");

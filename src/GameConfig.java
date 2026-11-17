@@ -14,21 +14,10 @@ public class GameConfig {
     @SerializedName(value = "regras", alternate = {"rules", "rule"})
     private RegrasConfig regras;
 
-    public String getJogo(){
-        return jogo;
-    }
-
-    public TabuleiroConfig getTabuleiro() {
-        return tabuleiro;
-    }
-
-    public PlayerConfig getJogador() {
-        return jogador;
-    }
-
-    public RegrasConfig getRegras() {
-        return regras;
-    }
+    public String getJogo() { return jogo; }
+    public TabuleiroConfig getTabuleiro() { return tabuleiro; }
+    public PlayerConfig getJogador() { return jogador; }
+    public RegrasConfig getRegras() { return regras; }
 
     public static class TabuleiroConfig {
         @SerializedName(value = "linhas", alternate = {"rows", "linha"})
@@ -37,13 +26,8 @@ public class GameConfig {
         @SerializedName(value = "colunas", alternate = {"columns", "coluna"})
         private int colunas;
 
-        public int getLinhas(){
-            return linhas;
-        }
-
-        public int getColunas() {
-            return colunas;
-        }
+        public int getLinhas() { return linhas; }
+        public int getColunas() { return colunas; }
     }
 
     public static class PlayerConfig {
@@ -53,22 +37,23 @@ public class GameConfig {
         @SerializedName(value = "simbolo", alternate = {"symbols", "simbolos", "symbol"})
         private List<String> simbolo;
 
-        public int getQuantidadedeJogador() {
-            return quantidadedeJogador;
-        }
-
-        public List<String> getSimbolo() {
-            return simbolo;
-        }
+        public int getQuantidadedeJogador() { return quantidadedeJogador; }
+        public List<String> getSimbolo() { return simbolo; }
     }
 
     public static class RegrasConfig {
+        @SerializedName(value = "posicionamento", alternate = {"placement"})
+        private String posicionamento;
+
+        @SerializedName(value = "captura", alternate = {"capture"})
+        private String captura;
+
         @SerializedName(value = "condicaodeVitoria", alternate = {"winCondition", "condicaoDeVitoria", "condicao_de_vitoria"})
         private CondicaodeVitoriaConfig condicaodeVitoria;
 
-        public CondicaodeVitoriaConfig getCondicaodeVitoria() {
-            return condicaodeVitoria;
-        }
+        public String getPosicionamento() { return posicionamento; }
+        public String getCaptura() { return captura; }
+        public CondicaodeVitoriaConfig getCondicaodeVitoria() { return condicaodeVitoria; }
 
         public static class CondicaodeVitoriaConfig {
             @SerializedName(value = "tipo", alternate = {"type"})
@@ -77,13 +62,8 @@ public class GameConfig {
             @SerializedName(value = "quantidade", alternate = {"quantity"})
             private int quantidade;
 
-            public int getQuantidade(){
-                return quantidade;
-            }
-
-            public String getTipo() {
-                return tipo;
-            }
+            public int getQuantidade() { return quantidade; }
+            public String getTipo() { return tipo; }
         }
     }
 }
