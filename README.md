@@ -7,9 +7,10 @@ Uma **Game Engine** reutilizável, extensível e genérica em Java projetada par
 ## 🏛️ Arquitetura e Conceitos de POO Aplicados
 
 - **Abstração e Polimorfismo Puro (`WinCondition`)**: O motor `Game` e a interface gráfica `GameGUI` executam o fluxo da partida, inicializam o tabuleiro, validam jogadas, aplicam capturas/conversões, verificam vitórias e desenham conexões visuais por meio do contrato da interface `WinCondition` (sem nenhum uso de `instanceof`).
+- **Herança e Reúso (`AbstractCaptureWinCondition`)**: Classe abstrata base que implementa `WinCondition` e centraliza o placar de capturas, a meta de eliminação e o controle de eventos para as subclasses `EliminationWinCondition` e `AtariGoWinCondition`.
 - **Padrão Factory Method (`WinConditionFactory`)**: Mapeia e instancia dinamicamente as condições de vitória a partir do parâmetro `tipo` informado no JSON (`ALIGNMENT`, `ELIMINATION`, `REVERSI`, `HEX`, `ATARI_GO`).
 - **Desacoplamento de Interface (Core vs. UI)**: A regra de negócio fica centralizada em `Game` e nas implementações de `WinCondition`, permitindo que tanto o modo terminal (`Main`) quanto a interface gráfica (`GameGUI` com `CardLayout`) compartilhem exatamente o mesmo motor.
-- **Mapeamento Flexível (`GameConfig` & Gson)**: Utiliza anotações `@SerializedName(alternate = ...)` para aceitar arquivos JSON configurados tanto em português (`linhas`, `colunas`, `jogador`, `descricao`) quanto em inglês (`rows`, `columns`, `players`, `description`).
+- **Mapeamento Flexível (`GameConfig` & Gson)**: Utiliza anotações `@SerializedName(alternate = ...)` para aceitar arquivos JSON configurados tanto em português (`linhas`, `colunas`, `jogador`, `descricao`, `turnos`, `tabuleiroInicial`) quanto em inglês (`rows`, `columns`, `players`, `description`, `turns`, `initialBoard`).
 - **Encapsulamento e Integridade (`Board`)**: Protege o estado interno da matriz e valida limites de coordenadas, casas vazias, contagem de peças e capturas por cerco.
 - **Tratamento Resiliente de Exceções**: Utiliza exceções personalizadas (`ConfiguraçãoIvalidaException` e `MovimentaçãoInvalidaException`) para tratar configurações malformadas e jogadas inválidas sem derrubar a aplicação com *stack traces*.
 
@@ -43,6 +44,7 @@ classDiagram
         +getJogo() String
         +getDescricao() String
         +getTabuleiro() TabuleiroConfig
+        +getTabuleiroInicial() List~List~String~~
         +getJogador() PlayerConfig
         +getRegras() RegrasConfig
     }
@@ -62,6 +64,16 @@ classDiagram
         +getDescricaoRegras() String
     }
 
+    class AbstractCaptureWinCondition {
+        <<abstract>>
+        #int metaCapturas
+        #Map~Character, Integer~ pontuacaoCapturas
+        #String ultimoEvento
+        +registrarCaptura(char simbolo, int quantidade)
+        +consumirUltimoEvento() String
+        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo) boolean
+    }
+
     class AlinhamentoWinCondition {
         -int meta
         +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo) boolean
@@ -69,12 +81,8 @@ classDiagram
     }
 
     class EliminationWinCondition {
-        -int metaCapturas
-        -Map~Character, Integer~ pontuacaoCapturas
-        +registrarCaptura(char simbolo, int quantidade)
         +executarJogada(Board tabuleiro, int linha, int coluna, char simbolo)
         +getTextoPlacar(List~Player~ jogadores, Board tabuleiro) String
-        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo) boolean
     }
 
     class ReversiWinCondition {
@@ -97,12 +105,9 @@ classDiagram
     }
 
     class AtariGoWinCondition {
-        -int metaCapturas
-        -Map~Character, Integer~ pontuacaoCapturas
         +eJogadaValida(Board tabuleiro, int linha, int coluna, char simbolo) boolean
         +executarJogada(Board tabuleiro, int linha, int coluna, char simbolo)
         +getTextoPlacar(List~Player~ jogadores, Board tabuleiro) String
-        +verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo) boolean
     }
 
     class WinConditionFactory {
@@ -168,10 +173,11 @@ classDiagram
     WinConditionFactory ..> WinCondition
     WinConditionFactory ..> ConfiguraçãoIvalidaException
     WinCondition <|.. AlinhamentoWinCondition
-    WinCondition <|.. EliminationWinCondition
+    WinCondition <|.. AbstractCaptureWinCondition
+    AbstractCaptureWinCondition <|-- EliminationWinCondition
+    AbstractCaptureWinCondition <|-- AtariGoWinCondition
     WinCondition <|.. ReversiWinCondition
     WinCondition <|.. HexWinCondition
-    WinCondition <|.. AtariGoWinCondition
     Game --> Board
     Game --> Player
     Game --> GameConfig
@@ -191,4 +197,32 @@ classDiagram
 | `jogo_territorio.json` | Domínio e Captura | 5x5 | Captura em sanduíche; vence quem eliminar 3 peças adversárias (`ELIMINATION`). |
 | `othello_reversi.json` | Othello / Reversi | 6x6 | Flanqueamento e conversão de peças; vence quem tiver a maioria ao final (`REVERSI`). |
 | `hex.json` | Hex | 7x7 | Conexão contínua entre bordas opostas em 6 direções hexagonais (`HEX`). |
-| `atari_go.json` | Atari Go | 7x7 | Cerco ortogonal de
+| `atari_go.json` | Atari Go | 7x7 | Cerco ortogonal de grupos (liberdades) e regra anti-suicídio; meta de 5 capturas (`ATARI_GO`). |
+
+---
+
+## 🚀 Como Executar
+
+### Pelo IntelliJ IDEA
+1. Abra o projeto no IntelliJ IDEA e certifique-se de que a biblioteca **Gson** (`lib/gson-2.10.1.jar`) está adicionada às dependências do módulo.
+2. Execute a classe `Main`:
+    - Digite **`1`** para jogar no **Modo Terminal (CLI)**.
+    - Digite **`2`** para abrir o **Modo Interface Gráfica (Swing)**.
+
+### Pelo Terminal (Linha de Comando)
+Na pasta raiz do projeto, compile e execute incluindo o JAR do Gson no classpath:
+
+- **Windows (PowerShell / CMD):**
+  ```bash
+  javac -encoding UTF-8 -cp "lib/gson-2.10.1.jar" -d out src/*.java
+  java -cp "out;lib/gson-2.10.1.jar" Main
+  ```
+- **Linux / macOS:**
+  ```bash
+  javac -encoding UTF-8 -cp "lib/gson-2.10.1.jar" -d out src/*.java
+  java -cp "out:lib/gson-2.10.1.jar" Main
+  ```
+- **Carregando um arquivo JSON diretamente via argumento:**
+  ```bash
+  java -cp "out;lib/gson-2.10.1.jar" Main Games/jogo_da_velha.json
+  ```

@@ -8,6 +8,15 @@ public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
+        if (args != null && args.length > 0) {
+            if ("--gui".equalsIgnoreCase(args[0])) {
+                abrirInterfaceGrafica();
+                return;
+            }
+            executarPartidaTerminal(args[0], scanner);
+            return;
+        }
+
         System.out.println("====================================");
         System.out.println("        BOARD GAME ENGINE           ");
         System.out.println("====================================");
@@ -19,10 +28,7 @@ public class Main {
         String modo = scanner.nextLine().trim();
 
         if ("2".equals(modo)) {
-            SwingUtilities.invokeLater(() -> {
-                GameGUI gui = new GameGUI();
-                gui.setVisible(true);
-            });
+            abrirInterfaceGrafica();
             return;
         }
 
@@ -59,8 +65,17 @@ public class Main {
             return;
         }
 
-        String caminhoArquivo = arquivosJson[opcao - 1].getPath();
+        executarPartidaTerminal(arquivosJson[opcao - 1].getPath(), scanner);
+    }
 
+    private static void abrirInterfaceGrafica() {
+        SwingUtilities.invokeLater(() -> {
+            GameGUI gui = new GameGUI();
+            gui.setVisible(true);
+        });
+    }
+
+    private static void executarPartidaTerminal(String caminhoArquivo, Scanner scanner) {
         try {
             GameConfig config = GameLoader.LoadConfig(caminhoArquivo);
 

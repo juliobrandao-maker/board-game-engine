@@ -55,9 +55,31 @@ public class Game {
     }
 
     public void prepararPartida() {
-        Random gerador = new Random();
-        this.indexAtual = gerador.nextInt(jogadores.size());
+        String regraTurnos = config.getRegras().getTurnos();
+        if ("SEQUENTIAL".equalsIgnoreCase(regraTurnos) || "SEQUENCIAL".equalsIgnoreCase(regraTurnos)) {
+            this.indexAtual = 0;
+        } else {
+            Random gerador = new Random();
+            this.indexAtual = gerador.nextInt(jogadores.size());
+        }
         this.jogadoratual = jogadores.get(indexAtual);
+
+        List<List<String>> tabInicial = config.getTabuleiroInicial();
+        if (tabInicial != null) {
+            for (int i = 0; i < tabInicial.size(); i++) {
+                List<String> linhaCfg = tabInicial.get(i);
+                for (int j = 0; j < linhaCfg.size(); j++) {
+                    String cel = linhaCfg.get(j);
+                    if (cel != null && !cel.trim().isEmpty()) {
+                        char c = cel.trim().charAt(0);
+                        if (c != '.' && c != '-') {
+                            tabuleiro.marcarPosicao(i, j, c);
+                        }
+                    }
+                }
+            }
+        }
+
         winCondition.inicializarJogo(tabuleiro, jogadores);
     }
 
@@ -126,7 +148,7 @@ public class Game {
         System.out.println("====================================");
         System.out.println("       INÍCIO: " + tituloJogo);
         System.out.println("====================================");
-        System.out.println("Sorteio realizado! Quem começa é: " + jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + ")\n");
+        System.out.println("Quem começa é: " + jogadoratual.getNome() + " (" + jogadoratual.getSimbolo() + ")\n");
 
         boolean jogoAtivo = true;
 
@@ -243,7 +265,7 @@ public class Game {
         boolean valido;
 
         if ("EMPTY_POSITION".equalsIgnoreCase(regraPos) || "GRAVITY".equalsIgnoreCase(regraPos)) {
-            valido = tabuleiro.posicaoVazia(linha, coluna);
+            valido = tabuleiro.posicaoVazia(linha, coluna) && winCondition.eJogadaValida(tabuleiro, linha, coluna, simbolo);
         } else {
             valido = winCondition.eJogadaValida(tabuleiro, linha, coluna, simbolo);
         }
@@ -261,8 +283,6 @@ public class Game {
             if (capturadas > 0) {
                 winCondition.registrarCapturaExterna(simbolo, capturadas);
             }
-        } else if ("NONE".equalsIgnoreCase(regraCap)) {
-            tabuleiro.marcarPosicao(linha, coluna, simbolo);
         } else {
             winCondition.executarJogada(tabuleiro, linha, coluna, simbolo);
         }
@@ -273,7 +293,7 @@ public class Game {
         for (int i = 0; i < tabuleiro.getLinha(); i++) {
             for (int j = 0; j < tabuleiro.getColuna(); j++) {
                 if ("EMPTY_POSITION".equalsIgnoreCase(regraPos) || "GRAVITY".equalsIgnoreCase(regraPos)) {
-                    if (tabuleiro.posicaoVazia(i, j)) return true;
+                    if (tabuleiro.posicaoVazia(i, j) && winCondition.eJogadaValida(tabuleiro, i, j, simbolo)) return true;
                 } else {
                     if (winCondition.eJogadaValida(tabuleiro, i, j, simbolo)) return true;
                 }

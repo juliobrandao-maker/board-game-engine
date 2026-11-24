@@ -1,23 +1,18 @@
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-public class AtariGoWinCondition implements WinCondition {
-    private int metaCapturas;
-    private Map<Character, Integer> pontuacaoCapturas = new HashMap<>();
-    private String ultimoEvento = "";
+public class AtariGoWinCondition extends AbstractCaptureWinCondition {
 
     private static final int[][] ORTOGONAIS = {
             {-1, 0}, {1, 0}, {0, -1}, {0, 1}
     };
 
     public AtariGoWinCondition(int metaCapturas) {
-        this.metaCapturas = (metaCapturas > 0) ? metaCapturas : 5;
+        super(metaCapturas);
     }
 
     @Override
@@ -80,33 +75,14 @@ public class AtariGoWinCondition implements WinCondition {
         }
 
         if (totalCapturadas > 0) {
-            pontuacaoCapturas.put(simbolo, pontuacaoCapturas.getOrDefault(simbolo, 0) + totalCapturadas);
+            registrarCaptura(simbolo, totalCapturadas);
             this.ultimoEvento = "Cercou e capturou " + totalCapturadas + " peça(s) do adversário!";
         }
     }
 
     @Override
-    public String consumirUltimoEvento() {
-        String msg = this.ultimoEvento;
-        this.ultimoEvento = "";
-        return msg;
-    }
-
-    @Override
-    public boolean verificarVitoria(Board tabuleiro, int ultimaLinha, int ultimaColuna, char simbolo) {
-        return pontuacaoCapturas.getOrDefault(simbolo, 0) >= metaCapturas;
-    }
-
-    @Override
     public String getTextoPlacar(List<Player> jogadores, Board tabuleiro) {
-        StringBuilder sb = new StringBuilder("Capturas Atari Go (Meta: " + metaCapturas + ") — ");
-        for (int i = 0; i < jogadores.size(); i++) {
-            Player p = jogadores.get(i);
-            sb.append(p.getNome()).append(" (").append(p.getSimbolo()).append("): ")
-                    .append(pontuacaoCapturas.getOrDefault(p.getSimbolo(), 0));
-            if (i < jogadores.size() - 1) sb.append("  |  ");
-        }
-        return sb.toString();
+        return formatarPlacarCapturas("Capturas Atari Go", jogadores);
     }
 
     private static class ResultadoGrupo {

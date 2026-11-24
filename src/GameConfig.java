@@ -11,6 +11,9 @@ public class GameConfig {
     @SerializedName(value = "tabuleiro", alternate = {"board"})
     private TabuleiroConfig tabuleiro;
 
+    @SerializedName(value = "tabuleiroInicial", alternate = {"initialBoard", "configuracaoInicial"})
+    private List<List<String>> tabuleiroInicial;
+
     @SerializedName(value = "jogador", alternate = {"players", "player", "jogadores"})
     private PlayerConfig jogador;
 
@@ -20,6 +23,7 @@ public class GameConfig {
     public String getJogo() { return jogo; }
     public String getDescricao() { return descricao; }
     public TabuleiroConfig getTabuleiro() { return tabuleiro; }
+    public List<List<String>> getTabuleiroInicial() { return tabuleiroInicial; }
     public PlayerConfig getJogador() { return jogador; }
     public RegrasConfig getRegras() { return regras; }
 
@@ -52,11 +56,15 @@ public class GameConfig {
         @SerializedName(value = "captura", alternate = {"capture"})
         private String captura;
 
+        @SerializedName(value = "turnos", alternate = {"turns", "ordemTurnos"})
+        private String turnos;
+
         @SerializedName(value = "condicaodeVitoria", alternate = {"winCondition", "condicaoDeVitoria", "condicao_de_vitoria"})
         private CondicaodeVitoriaConfig condicaodeVitoria;
 
         public String getPosicionamento() { return posicionamento; }
         public String getCaptura() { return captura; }
+        public String getTurnos() { return turnos; }
         public CondicaodeVitoriaConfig getCondicaodeVitoria() { return condicaodeVitoria; }
 
         public static class CondicaodeVitoriaConfig {

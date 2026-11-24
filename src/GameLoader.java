@@ -40,8 +40,10 @@ public class GameLoader {
         if (simbolos == null || simbolos.size() < 2) {
             throw new ConfiguraçãoIvalidaException("O jogo deve ter pelo menos 2 símbolos de jogadores definidos.");
         }
-        if (qtdJogadores > 0 && (qtdJogadores < 2 || simbolos.size() < qtdJogadores)) {
-            throw new ConfiguraçãoIvalidaException("A quantidade de jogadores é incompatível com os símbolos informados.");
+        if (qtdJogadores != 0 && qtdJogadores != simbolos.size()) {
+            throw new ConfiguraçãoIvalidaException(
+                    "A quantidade de jogadores (" + qtdJogadores + ") é incompatível com a quantidade de símbolos (" + simbolos.size() + ")."
+            );
         }
 
         Set<Character> simbolosUnicos = new HashSet<>();
@@ -67,8 +69,23 @@ public class GameLoader {
                 throw new ConfiguraçãoIvalidaException("Meta de alinhamento inválida (" + meta + ") para um tabuleiro " + linhas + "x" + colunas + ".");
             }
         }
-        if ((tipo.equals("REVERSI") || tipo.equals("OTHELLO")) && (linhas < 4 || colunas < 4)) {
-            throw new ConfiguraçãoIvalidaException("Othello/Reversi exige um tabuleiro de pelo menos 4x4.");
+        if (tipo.equals("ELIMINACAO") || tipo.equals("ELIMINATION")
+                || tipo.equals("ATARI_GO") || tipo.equals("GO")
+                || tipo.equals("CAPTURE_GROUP") || tipo.equals("CAPTURA_GRUPO")) {
+            if (cv.getQuantidade() <= 0) {
+                throw new ConfiguraçãoIvalidaException("A meta de capturas deve ser maior que zero.");
+            }
+        }
+        if (tipo.equals("REVERSI") || tipo.equals("OTHELLO")) {
+            if (linhas < 4 || colunas < 4) {
+                throw new ConfiguraçãoIvalidaException("Othello/Reversi exige um tabuleiro de pelo menos 4x4.");
+            }
+            if (simbolos.size() != 2) {
+                throw new ConfiguraçãoIvalidaException("Othello/Reversi exige exatamente 2 jogadores.");
+            }
+        }
+        if ((tipo.equals("HEX") || tipo.equals("CONNECTION") || tipo.equals("CONEXAO")) && simbolos.size() != 2) {
+            throw new ConfiguraçãoIvalidaException("O jogo Hex exige exatamente 2 jogadores.");
         }
 
         String pos = config.getRegras().getPosicionamento();
@@ -84,6 +101,36 @@ public class GameLoader {
             String cNorm = cap.toUpperCase().trim();
             if (!cNorm.equals("NONE") && !cNorm.equals("SANDWICH")) {
                 throw new ConfiguraçãoIvalidaException("Regra de captura '" + cap + "' não reconhecida.");
+            }
+        }
+
+        String turnos = config.getRegras().getTurnos();
+        if (turnos != null && !turnos.trim().isEmpty()) {
+            String tNorm = turnos.toUpperCase().trim();
+            if (!tNorm.equals("RANDOM") && !tNorm.equals("ALEATORIO")
+                    && !tNorm.equals("SEQUENTIAL") && !tNorm.equals("SEQUENCIAL")) {
+                throw new ConfiguraçãoIvalidaException("Regra de turnos '" + turnos + "' não reconhecida.");
+            }
+        }
+
+        List<List<String>> tabInicial = config.getTabuleiroInicial();
+        if (tabInicial != null) {
+            if (tabInicial.size() != linhas) {
+                throw new ConfiguraçãoIvalidaException("O tabuleiro inicial deve possuir exatamente " + linhas + " linhas.");
+            }
+            for (int i = 0; i < linhas; i++) {
+                List<String> linhaCfg = tabInicial.get(i);
+                if (linhaCfg == null || linhaCfg.size() != colunas) {
+                    throw new ConfiguraçãoIvalidaException("A linha " + (i + 1) + " do tabuleiro inicial deve possuir " + colunas + " colunas.");
+                }
+                for (String cel : linhaCfg) {
+                    if (cel != null && !cel.trim().isEmpty()) {
+                        char c = cel.trim().charAt(0);
+                        if (c != '.' && c != '-' && !simbolosUnicos.contains(c)) {
+                            throw new ConfiguraçãoIvalidaException("Símbolo inválido no tabuleiro inicial: '" + c + "'.");
+                        }
+                    }
+                }
             }
         }
     }
